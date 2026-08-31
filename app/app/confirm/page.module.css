@@ -1,0 +1,152 @@
+.page {
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 120px;
+}
+
+.scroll {
+  padding: 8px 0;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* 强制确认提示 */
+.banner {
+  margin: 8px 20px 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-card);
+  background: linear-gradient(135deg, rgba(124, 91, 201, 0.22), rgba(236, 72, 153, 0.16));
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.banner h3 {
+  font: 700 14px/20px var(--font-display);
+  margin: 0 0 2px;
+  color: var(--color-text-primary);
+}
+.banner p {
+  font: 400 12px/18px var(--font-body);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.sourceRow {
+  margin: 0 20px 16px;
+  display: flex;
+  gap: 10px;
+}
+.sourceChip {
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.32);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+}
+
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 20px 12px;
+}
+.sectionHead h2 {
+  font: 700 18px/24px var(--font-display);
+  margin: 0;
+}
+
+.ingredientList {
+  margin: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.manualHint {
+  margin: 16px 20px;
+  padding: 10px 14px;
+  border-radius: var(--radius-default);
+  background: var(--color-status-info-bg);
+  color: var(--color-status-info-fg);
+  font: 400 12px/18px var(--font-body);
+}
+
+/* 底部确认栏 */
+.confirmBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0));
+  background: rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  max-width: 520px;
+  margin: 0 auto;
+  z-index: var(--z-sticky);
+}
+.count {
+  font: 500 12px/16px var(--font-mono);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+/* 编辑 BottomSheet 内容 */
+.candidateList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.candidate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: var(--radius-default);
+  background: var(--color-surface-container-low);
+  border: 1px solid var(--color-divider);
+  cursor: pointer;
+}
+.candidate.selected {
+  background: var(--color-primary-fixed);
+  border-color: var(--color-primary);
+}
+.candidateName {
+  font: 600 14px/20px var(--font-display);
+}
+.candidateScore {
+  font: 500 11px/16px var(--font-mono);
+  color: var(--color-primary);
+  background: rgba(255, 255, 255, 0.6);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+.manualInput {
+  width: 100%;
+  box-sizing: border-box;
+  height: 48px;
+  border-radius: var(--radius-default);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-container-lowest);
+  padding: 0 14px;
+  font: 500 14px/1 var(--font-body);
+  color: var(--color-text-primary);
+}
+.manualInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-fixed);
+}

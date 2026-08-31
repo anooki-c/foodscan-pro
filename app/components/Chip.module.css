@@ -1,0 +1,26 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font: 500 10px/14px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+}
+
+/* 分类色：天然浅绿 / 加工浅黄 / 添加剂浅红 / 过敏原浅紫 */
+.cat-natural { background: var(--color-status-natural-bg); color: var(--color-status-natural-fg); }
+.cat-processed { background: var(--color-status-processed-bg); color: var(--color-status-processed-fg); }
+.cat-additive { background: var(--color-status-additive-bg); color: var(--color-status-additive-fg); }
+.allergen { background: var(--color-status-allergen-bg); color: var(--color-status-allergen-fg); }
+.role { background: var(--color-status-info-bg); color: var(--color-status-info-fg); }
+.info { background: var(--color-status-info-bg); color: var(--color-status-info-fg); }
+.warning { background: var(--color-status-warning-bg); color: var(--color-status-warning-fg); }
+.plain { background: var(--color-surface-container); color: var(--color-text-secondary); }
+
+/* 置信度 */
+.conf-high { background: var(--color-status-natural-bg); color: var(--color-status-natural-fg); }
+.conf-medium { background: var(--color-status-processed-bg); color: var(--color-status-processed-fg); }
+.conf-low { background: var(--color-status-additive-bg); color: var(--color-status-additive-fg); }
+.conf-manual { background: var(--color-status-info-bg); color: var(--color-status-info-fg); }

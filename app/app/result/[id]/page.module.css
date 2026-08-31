@@ -1,0 +1,266 @@
+.page {
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 120px;
+}
+
+.scroll {
+  padding: 8px 0;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.iconBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.32);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.empty {
+  padding: 80px 20px;
+  text-align: center;
+}
+.empty h2 {
+  font: 700 18px/24px var(--font-display);
+  margin-bottom: 16px;
+}
+
+/* 产品头 */
+.productHead {
+  padding: 8px 20px 20px;
+}
+.productHead h1 {
+  font: 700 24px/32px var(--font-display);
+  margin: 0 0 4px;
+  letter-spacing: var(--tracking-tight);
+}
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  font: 400 12px/18px var(--font-body);
+  color: var(--color-text-secondary);
+}
+.sourceChip {
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.32);
+  -webkit-backdrop-filter: blur(14px) saturate(180%);
+  backdrop-filter: blur(14px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  font: 500 10px/14px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* 概览 */
+.overview {
+  margin: 0 20px 20px;
+}
+.overviewHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.overviewHead h2 {
+  font: 700 16px/22px var(--font-display);
+  margin: 0;
+}
+.note {
+  font: 400 11px/16px var(--font-body);
+  color: var(--color-text-tertiary);
+}
+
+/* 区块 */
+.section {
+  margin: 0 20px 20px;
+}
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.sectionHead h2 {
+  font: 700 16px/22px var(--font-display);
+  margin: 0;
+}
+.count {
+  font: 500 11px/16px var(--font-mono);
+  color: var(--color-text-tertiary);
+}
+
+/* 配料行 */
+.ingRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-divider);
+  width: 100%;
+  background: none;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+.ingRow:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+.ingRow:last-child {
+  border-bottom: none;
+}
+.idx {
+  font: 500 11px/16px var(--font-mono);
+  color: var(--color-text-tertiary);
+  width: 22px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.ingInfo {
+  flex: 1;
+  min-width: 0;
+}
+.ingName {
+  font: 600 14px/20px var(--font-display);
+}
+.tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 3px;
+  flex-wrap: wrap;
+}
+.chev {
+  color: var(--color-text-tertiary);
+  flex-shrink: 0;
+}
+
+/* 添加剂 */
+.additiveStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.statChip {
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-status-additive-bg);
+  color: var(--color-status-additive-fg);
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* 过敏原 */
+.allergenBlock {
+  border-radius: var(--radius-default);
+  padding: 12px;
+  background: var(--color-status-allergen-bg);
+  border: 1px solid var(--color-status-allergen-border);
+  margin-bottom: 10px;
+}
+.allergenHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: var(--color-status-allergen-fg);
+}
+.allergenName {
+  font: 700 14px/20px var(--font-display);
+  color: var(--color-status-allergen-fg);
+}
+.allergenSrc {
+  font: 400 12px/18px var(--font-body);
+  color: var(--color-status-allergen-fg);
+  opacity: 0.85;
+}
+.allergenNote {
+  font: 400 11px/16px var(--font-body);
+  color: var(--color-text-secondary);
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: var(--radius-default);
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* AI */
+.aiBlock {
+  margin: 0 20px 20px;
+  border-radius: var(--radius-card);
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(124, 91, 201, 0.12), rgba(236, 72, 153, 0.1));
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+.aiHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.aiPill {
+  background: var(--gradient-accent);
+  color: white;
+  font: 700 10px/14px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+}
+.aiRefresh {
+  margin-left: auto;
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+}
+.aiSpinning {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.aiBlock p {
+  font: 400 13px/22px var(--font-body);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.aiNote {
+  margin-top: 10px !important;
+  font: 400 11px/16px var(--font-body) !important;
+  color: var(--color-text-tertiary) !important;
+  border-top: 1px dashed rgba(124, 91, 201, 0.25);
+  padding-top: 10px !important;
+}
+
+/* 底部操作 */
+.actionBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0));
+  background: rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-top: 1px solid rgba(255, 255, 255, 0.5);
+  display: flex;
+  gap: 12px;
+  max-width: 520px;
+  margin: 0 auto;
+  z-index: var(--z-sticky);
+}

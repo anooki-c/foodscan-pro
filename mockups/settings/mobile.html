@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>食品配料分析 · 过敏原关注项</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    @font-face {
+      font-family: "Material Symbols Rounded";
+      font-style: normal;
+      font-weight: 100 700;
+      font-display: swap;
+      src: url("../assets/fonts/material-symbols-rounded.woff2") format("woff2");
+    }
+    .material-symbols-rounded {
+      font-family: "Material Symbols Rounded";
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: "liga";
+      -webkit-font-smoothing: antialiased;
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    }
+  </style>
+  <link rel="stylesheet" href="../../tokens/design-tokens.css" />
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      background: linear-gradient(180deg, #EDE7F6 0%, #FCE4EC 60%, #F8D7E8 100%);
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: var(--color-text-primary);
+    }
+    .device-frame {
+      width: 390px;
+      min-height: 844px;
+      margin: 24px auto;
+      border-radius: 36px;
+      box-shadow: 0 20px 60px rgba(124, 91, 201, 0.18);
+      overflow: hidden;
+      position: relative;
+      border: 8px solid #1A1626;
+      background: var(--gradient-bg);
+    }
+    .device-status {
+      height: 54px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 32px;
+      font: 600 15px/1 var(--font-display);
+      color: var(--color-text-primary);
+      position: relative;
+    }
+    .device-status .icons { display: flex; gap: 6px; align-items: center; }
+    .device-status .material-symbols-rounded { font-size: 16px; }
+    .dynamic-island {
+      position: absolute;
+      top: 12px; left: 50%; transform: translateX(-50%);
+      width: 110px; height: 32px;
+      background: #0E0A1A;
+      border-radius: 16px;
+    }
+
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 16px 12px;
+    }
+    .icon-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.32);
+      backdrop-filter: blur(14px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.45);
+      color: var(--color-text-primary);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+    .topbar .title { font: 700 16px/24px var(--font-display); }
+
+    .scroll { padding: 0 0 140px; }
+
+    /* 顶部提示 */
+    .tip-card {
+      margin: 8px 20px 20px;
+      padding: 16px;
+      border-radius: var(--radius-card);
+      background: linear-gradient(135deg, rgba(124,91,201,0.18), rgba(236,72,153,0.14));
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      backdrop-filter: blur(18px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.45);
+      display: flex; gap: 12px; align-items: flex-start;
+    }
+    .tip-card .icon { color: var(--color-primary); }
+    .tip-card h3 { font: 700 15px/22px var(--font-display); margin: 0 0 4px; }
+    .tip-card p { font: 400 12px/18px var(--font-body); color: var(--color-text-secondary); margin: 0; }
+
+    /* 选项组 */
+    .option-group {
+      margin: 0 20px;
+      border-radius: var(--radius-card);
+      background: rgba(255,255,255,0.30);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      backdrop-filter: blur(18px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.50);
+      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.55);
+      overflow: hidden;
+    }
+    .option {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px;
+      border-bottom: 1px solid var(--color-divider);
+      cursor: pointer;
+    }
+    .option:last-child { border-bottom: none; }
+    .option .label { display: flex; align-items: center; gap: 12px; }
+    .option .emoji { font-size: 18px; }
+    .option .name { font: 600 14px/20px var(--font-display); }
+    .option .sub { font: 400 11px/16px var(--font-body); color: var(--color-text-tertiary); }
+
+    /* 切换开关 */
+    .switch {
+      position: relative;
+      width: 44px; height: 26px;
+      border-radius: 13px;
+      background: rgba(124,91,201,0.2);
+      transition: background 0.2s var(--ease-standard);
+      flex-shrink: 0;
+    }
+    .switch::after {
+      content: '';
+      position: absolute;
+      top: 3px; left: 3px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: white;
+      box-shadow: 0 2px 6px rgba(124,91,201,0.3);
+      transition: transform 0.2s var(--ease-standard);
+    }
+    .option.on .switch { background: var(--gradient-accent); }
+    .option.on .switch::after { transform: translateX(18px); }
+
+    /* 底部完成按钮 */
+    .bottom-bar {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 16px 20px 32px;
+      background: rgba(255,255,255,0.60);
+      backdrop-filter: blur(24px) saturate(180%);
+      border-top: 1px solid rgba(255,255,255,0.5);
+    }
+    .btn-primary {
+      width: 100%;
+      height: 50px;
+      border-radius: var(--radius-pill);
+      background: var(--gradient-accent);
+      color: white;
+      border: none;
+      font: 700 15px/20px var(--font-body);
+      cursor: pointer;
+      box-shadow: var(--shadow-floating);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="device-frame">
+    <div class="device-status">
+      <span>9:41</span>
+      <div class="dynamic-island"></div>
+      <span class="icons">
+        <span class="material-symbols-rounded">signal_cellular_alt</span>
+        <span class="material-symbols-rounded">wifi</span>
+        <span class="material-symbols-rounded">battery_full</span>
+      </span>
+    </div>
+
+    <div class="topbar">
+      <button class="icon-btn" aria-label="返回">
+        <span class="material-symbols-rounded">arrow_back</span>
+      </button>
+      <div class="title">过敏原关注项</div>
+      <div style="width:40px"></div>
+    </div>
+
+    <div class="scroll">
+      <div class="tip-card">
+        <span class="icon material-symbols-rounded" style="font-size:22px">info</span>
+        <div>
+          <h3>勾选你希望重点关注的过敏原类别</h3>
+          <p>勾选后，分析结果页会优先提示含这些成分的配料。设置仅保存在本机。本工具不构成医疗建议，请以食品包装上的过敏原声明为准。</p>
+        </div>
+      </div>
+
+      <div class="option-group">
+        <div class="option on">
+          <div class="label"><span class="emoji">🥜</span><div><div class="name">花生 / 坚果</div><div class="sub">花生、杏仁、榛子等</div></div></div>
+          <div class="switch"></div>
+        </div>
+        <div class="option">
+          <div class="label"><span class="emoji">🦐</span><div><div class="name">甲壳类海鲜</div><div class="sub">虾、蟹、龙虾等</div></div></div>
+          <div class="switch"></div>
+        </div>
+        <div class="option">
+          <div class="label"><span class="emoji">🐟</span><div><div class="name">鱼类</div><div class="sub">三文鱼、金枪鱼等</div></div></div>
+          <div class="switch"></div>
+        </div>
+        <div class="option">
+          <div class="label"><span class="emoji">🫘</span><div><div class="name">大豆 / 豆制品</div><div class="sub">大豆卵磷脂、酱油等</div></div></div>
+          <div class="switch"></div>
+        </div>
+        <div class="option on">
+          <div class="label"><span class="emoji">🥛</span><div><div class="name">乳 / 乳制品</div><div class="sub">乳粉、乳清、黄油等</div></div></div>
+          <div class="switch"></div>
+        </div>
+        <div class="option">
+          <div class="label"><span class="emoji">🌾</span><div><div class="name">麸质 / 小麦</div><div class="sub">小麦粉、麦芽等</div></div></div>
+          <div class="switch"></div>
+        </div>
+        <div class="option">
+          <div class="label"><span class="emoji">🥚</span><div><div class="name">鸡蛋</div><div class="sub">蛋清、蛋黄等</div></div></div>
+          <div class="switch"></div>
+        </div>
+        <div class="option">
+          <div class="label"><span class="emoji">⚪</span><div><div class="name">芝麻</div><div class="sub">芝麻、芝麻酱等</div></div></div>
+          <div class="switch"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-bar">
+      <button class="btn-primary">
+        <span class="material-symbols-rounded" style="font-size:18px">check</span>
+        完成
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // 开关切换（原型演示用）
+    document.querySelectorAll('.option').forEach(function (opt) {
+      opt.addEventListener('click', function () {
+        this.classList.toggle('on');
+      });
+    });
+  </script>
+</body>
+</html>

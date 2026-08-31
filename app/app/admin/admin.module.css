@@ -1,0 +1,100 @@
+.page {
+  min-height: 100vh;
+}
+
+.appbar {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  background: rgba(255, 255, 255, 0.75);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--color-divider);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brandMark {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-thumb);
+  background: var(--gradient-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: var(--shadow-floating);
+}
+.brandName {
+  font: 700 18px/1 var(--font-display);
+  letter-spacing: var(--tracking-tight);
+}
+.adminTag {
+  font: 500 10px/14px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+  background: var(--color-primary-fixed);
+  color: var(--color-primary);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+}
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-divider);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--color-text-primary);
+  font: 500 13px/20px var(--font-body);
+  text-decoration: none;
+}
+
+.layout {
+  max-width: var(--grid-max-width);
+  margin: 0 auto;
+  display: flex;
+  gap: 24px;
+  padding: 32px;
+}
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  position: sticky;
+  top: 96px;
+  align-self: flex-start;
+}
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-default);
+  font: 500 14px/20px var(--font-body);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+.navItem[aria-current="page"] {
+  background: var(--gradient-cool);
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(92, 107, 192, 0.3);
+}
+.content {
+  flex: 1;
+  min-width: 0;
+}

@@ -1,0 +1,55 @@
+# ============================================================
+# 食品配料分析 · 群晖部署（docker-compose）
+# 用法（群晖 SSH）：
+#   cd /volume1/docker/foodscan/app
+#   docker compose up -d --build
+# 或在群晖 Container Manager → 项目 → 新建 → 导入本文件
+# ============================================================
+
+services:
+  foodscan:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # 国内构建慢时取消注释：
+      # args:
+      #   NPM_REGISTRY: https://registry.npmmirror.com
+    image: foodscan-pro:latest
+    container_name: foodscan-pro
+    restart: unless-stopped
+    ports:
+      # 宿主机端口 : 容器端口（改左边的 3001 可换对外端口）
+      - "3001:3000"
+    environment:
+      # ---- 食品数据库（OFF） ----
+      OFF_ENABLED: "true"
+      # OFF_API_URL: "https://world.openfoodfacts.org"
+
+      # ---- 第三方 OCR（PRD §7.4，未配置回退本地模拟） ----
+      OCR_ENABLED: "false"
+      # OCR_PROVIDER: "provider-a"
+      # OCR_API_URL: "https://your-ocr-provider.example.com/v1/recognize"
+      # OCR_API_KEY: "xxx"
+      OCR_TIMEOUT_MS: "10000"
+      OCR_CONFIDENCE_THRESHOLD: "80"
+
+      # ---- AI 配料解读（PRD §14，未配置回退 mock） ----
+      AI_ENABLED: "false"
+      # AI_PROVIDER: "openai-compatible"
+      # AI_API_URL: "https://api.example.com/v1/chat/completions"
+      # AI_API_KEY: "xxx"
+      AI_TIMEOUT_MS: "15000"
+    volumes:
+      # 持久化（可选）：历史记录在浏览器本地，服务端无需持久化；
+      # 如需挂载自定义数据可取消注释
+      # - ./data:/app/data
+      - foodscan_data:/app/data
+    networks:
+      - foodscan-net
+
+networks:
+  foodscan-net:
+    driver: bridge
+
+volumes:
+  foodscan_data:

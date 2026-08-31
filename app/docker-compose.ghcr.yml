@@ -1,0 +1,35 @@
+# ============================================================
+# 食品配料分析 · GHCR 拉取部署（配合 GitHub Actions CI）
+#
+# 用法：
+#   docker compose -f docker-compose.ghcr.yml up -d
+#
+# 前提：镜像已由 GitHub Actions 构建并推送到 GHCR。
+# 群晖拉取 GHCR 需要：镜像已设为 public（见部署指南 §CI-6）
+# 或配置 GHCR_TOKEN 环境变量用于登录。
+# ============================================================
+
+services:
+  foodscan:
+    # 镜像名：占位符会在首次使用时替换为你的 GitHub 用户名
+    image: ghcr.io/your-github-username/foodscan-pro:latest
+    container_name: foodscan-pro
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      OFF_ENABLED: "true"
+      # 需要时填写真实 OCR/AI（与 docker-compose.yml 相同结构）
+      OCR_ENABLED: "false"
+      AI_ENABLED: "false"
+    volumes:
+      - foodscan_data:/app/data
+    networks:
+      - foodscan-net
+
+networks:
+  foodscan-net:
+    driver: bridge
+
+volumes:
+  foodscan_data:

@@ -1,0 +1,25 @@
+# 依赖
+node_modules/
+
+# Next.js 构建产物
+.next/
+out/
+
+# 环境与密钥（绝不推送）
+.env
+.env*.local
+*.pem
+
+# 日志与缓存
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+*.tsbuildinfo
+
+# IDE
+.idea
+.vscode
+
+# 压缩包等临时产物
+*.7z

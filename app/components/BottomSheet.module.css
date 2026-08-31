@@ -1,0 +1,62 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(14, 10, 26, 0.4);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 520px;
+  background: rgba(255, 255, 255, 0.94);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 24px 24px 0 0;
+  padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0));
+  max-height: 82vh;
+  overflow-y: auto;
+  animation: slideUp 0.28s var(--ease-emphasized);
+  box-shadow: 0 -8px 40px rgba(124, 91, 201, 0.18);
+}
+
+.handle {
+  width: 40px;
+  height: 4px;
+  background: rgba(124, 91, 201, 0.3);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+.title {
+  font: 700 20px/28px var(--font-display);
+  margin: 0 0 4px;
+  color: var(--color-text-primary);
+}
+
+.sub {
+  font: 400 13px/20px var(--font-body);
+  color: var(--color-text-secondary);
+  margin: 0 0 16px;
+}
+
+.body {
+  padding-bottom: 8px;
+}
+
+.footer {
+  display: flex;
+  gap: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-divider);
+  margin-top: 8px;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

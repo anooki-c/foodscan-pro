@@ -1,0 +1,98 @@
+.titleRow {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+}
+
+.oneLiner {
+  font: 400 14px/22px var(--font-body);
+  color: var(--color-text-primary);
+  margin: 0 0 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.fieldLabel {
+  font: 500 10px/14px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-tertiary);
+}
+
+.fieldValue {
+  font: 400 13px/20px var(--font-body);
+  color: var(--color-text-primary);
+}
+
+.detailBlock {
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: var(--radius-default);
+  background: var(--color-surface-container-low);
+}
+
+.detailBlock h4 {
+  font: 700 12px/18px var(--font-display);
+  margin: 0 0 4px;
+}
+
+.detailBlock p {
+  font: 400 12px/18px var(--font-body);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+/* 可折叠区 */
+.advanced {
+  margin-top: 12px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-default);
+  overflow: hidden;
+}
+
+.advancedToggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  font: 600 12px/16px var(--font-body);
+  color: var(--color-text-secondary);
+}
+
+.advancedBody {
+  padding: 0 14px 12px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.advancedBody .field:last-child {
+  border-bottom: none;
+}
+
+.footerInner {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.disclaimer {
+  margin-top: 12px;
+  font: 400 11px/16px var(--font-body);
+  color: var(--color-text-tertiary);
+  padding: 8px 10px;
+  border-radius: var(--radius-default);
+  background: var(--color-surface-container-low);
+}

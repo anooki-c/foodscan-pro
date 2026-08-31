@@ -1,0 +1,67 @@
+.wrap {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.ring {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  flex-shrink: 0;
+}
+
+.ring svg {
+  transform: rotate(-90deg);
+}
+
+.center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.num {
+  font: 700 22px/28px var(--font-display);
+  color: var(--color-text-primary);
+}
+
+.label {
+  font: 500 10px/14px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-tertiary);
+}
+
+.legend {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.name {
+  flex: 1;
+  font: 400 12px/16px var(--font-body);
+  color: var(--color-text-secondary);
+}
+
+.val {
+  font: 600 13px/16px var(--font-mono);
+  color: var(--color-text-primary);
+}

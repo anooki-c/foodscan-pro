@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>食品配料分析 · 后台管理</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    @font-face {
+      font-family: "Material Symbols Rounded";
+      font-style: normal;
+      font-weight: 100 700;
+      font-display: swap;
+      src: url("../assets/fonts/material-symbols-rounded.woff2") format("woff2");
+    }
+    .material-symbols-rounded {
+      font-family: "Material Symbols Rounded";
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: "liga";
+      -webkit-font-smoothing: antialiased;
+      font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    }
+  </style>
+  <link rel="stylesheet" href="../../tokens/design-tokens.css" />
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      background: linear-gradient(180deg, #EDE7F6 0%, #FCE4EC 60%, #F8D7E8 100%);
+      min-height: 100vh;
+      font-family: var(--font-body);
+      color: var(--color-text-primary);
+    }
+    .appbar {
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(255,255,255,0.75);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--color-divider);
+      position: sticky; top: 0; z-index: var(--z-sticky);
+    }
+    .appbar .brand { display: flex; align-items: center; gap: 10px; }
+    .appbar .brand-mark {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-thumb);
+      background: var(--gradient-accent);
+      display: flex; align-items: center; justify-content: center;
+      color: white;
+      box-shadow: var(--shadow-floating);
+    }
+    .appbar .brand-name { font: 700 18px/1 var(--font-display); letter-spacing: var(--tracking-tight); }
+    .appbar .admin-tag {
+      font: 500 10px/14px var(--font-mono);
+      letter-spacing: var(--tracking-wide);
+      background: var(--color-primary-fixed);
+      color: var(--color-primary);
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+    }
+    .appbar .actions { display: flex; gap: 12px; }
+    .appbar .btn {
+      height: 40px; padding: 0 16px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--color-divider);
+      background: rgba(255,255,255,0.7);
+      color: var(--color-text-primary);
+      font: 500 13px/20px var(--font-body);
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      backdrop-filter: blur(8px);
+    }
+    .appbar .btn:hover { background: rgba(255,255,255,0.9); }
+
+    .layout {
+      max-width: var(--grid-max-width);
+      margin: 0 auto;
+      display: flex; gap: 24px;
+      padding: 32px;
+    }
+
+    /* 侧边导航 */
+    .sidebar {
+      width: 220px; flex-shrink: 0;
+      display: flex; flex-direction: column; gap: 4px;
+      align-self: flex-start;
+      position: sticky; top: 96px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius-default);
+      background: transparent;
+      border: none;
+      font: 500 14px/20px var(--font-body);
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      text-align: left;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.5); }
+    .nav-item.active {
+      background: var(--gradient-cool);
+      color: white;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(92,107,192,0.3);
+    }
+    .nav-item .material-symbols-rounded { font-size: 20px; }
+
+    /* 内容区 */
+    .content { flex: 1; min-width: 0; }
+    .page-title { margin-bottom: 20px; }
+    .page-title h1 { font: 700 24px/32px var(--font-display); margin: 0 0 4px; letter-spacing: var(--tracking-snug); }
+    .page-title p { font: 400 13px/20px var(--font-body); color: var(--color-text-secondary); margin: 0; }
+
+    .grid { display: grid; gap: 16px; }
+    .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+    .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+
+    .card {
+      background: rgba(255,255,255,0.30);
+      -webkit-backdrop-filter: blur(18px) saturate(180%);
+      backdrop-filter: blur(18px) saturate(180%);
+      border: 1px solid rgba(255,255,255,0.50);
+      border-radius: var(--radius-card);
+      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255,255,255,0.55);
+      padding: 20px;
+    }
+    .card .label { font: 500 11px/16px var(--font-mono); letter-spacing: var(--tracking-wide); color: var(--color-text-secondary); margin-bottom: 8px; }
+    .card .value { font: 700 24px/32px var(--font-display); }
+    .card .status-row { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .status-dot.ok { background: var(--ring-natural); }
+    .status-dot.err { background: var(--ring-additive); }
+    .status-dot.off { background: var(--color-text-tertiary); }
+    .status-text { font: 400 12px/16px var(--font-body); color: var(--color-text-secondary); }
+
+    .card h3 { font: 700 16px/22px var(--font-display); margin: 0 0 16px; }
+
+    .stat-list { display: flex; flex-direction: column; gap: 12px; }
+    .stat-line { display: flex; justify-content: space-between; font: 400 13px/18px var(--font-body); }
+    .stat-line .k { color: var(--color-text-secondary); }
+    .stat-line .v { font-family: var(--font-mono); font-weight: 500; }
+
+    /* 表格 */
+    table.data {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    table.data th {
+      text-align: left;
+      font: 600 11px/16px var(--font-mono);
+      letter-spacing: var(--tracking-wide);
+      color: var(--color-text-secondary);
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--color-divider);
+    }
+    table.data td {
+      padding: 12px;
+      border-bottom: 1px solid var(--color-divider);
+      font-family: var(--font-body);
+    }
+    table.data tr:last-child td { border-bottom: none; }
+    .tag {
+      display: inline-flex; align-items: center;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      font: 500 10px/14px var(--font-mono);
+      letter-spacing: var(--tracking-wide);
+    }
+    .tag.on { background: var(--color-status-natural-bg); color: var(--color-status-natural-fg); }
+    .tag.off { background: var(--color-surface-container); color: var(--color-text-tertiary); }
+    .tag.primary { background: var(--color-primary-fixed); color: var(--color-primary); }
+
+    .btn-sm {
+      height: 30px; padding: 0 12px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--color-divider);
+      background: rgba(255,255,255,0.5);
+      color: var(--color-text-primary);
+      font: 500 11px/14px var(--font-body);
+      cursor: pointer;
+    }
+    .btn-sm:hover { background: rgba(255,255,255,0.9); }
+
+    .section-gap { margin-top: 16px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <header class="appbar">
+    <div class="brand">
+      <div class="brand-mark"><span class="material-symbols-rounded">science</span></div>
+      <span class="brand-name">食品配料分析</span>
+      <span class="admin-tag">ADMIN</span>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="goHome()">
+        <span class="material-symbols-rounded" style="font-size:18px">arrow_back</span>
+        返回前台
+      </button>
+      <button class="btn">管理员</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <button class="nav-item active" data-page="dashboard"><span class="material-symbols-rounded">dashboard</span>Dashboard</button>
+      <button class="nav-item" data-page="datasources"><span class="material-symbols-rounded">database</span>食品数据源</button>
+      <button class="nav-item" data-page="off"><span class="material-symbols-rounded">inventory_2</span>OFF 更新</button>
+      <button class="nav-item" data-page="ocr"><span class="material-symbols-rounded">document_scanner</span>OCR 配置</button>
+      <button class="nav-item" data-page="ai"><span class="material-symbols-rounded">auto_awesome</span>AI 配置</button>
+      <button class="nav-item" data-page="knowledge"><span class="material-symbols-rounded">menu_book</span>知识库</button>
+      <button class="nav-item" data-page="system"><span class="material-symbols-rounded">info</span>系统状态</button>
+    </aside>
+
+    <main class="content">
+      <!-- ========== Dashboard ========== -->
+      <section id="dashboard" class="page">
+        <div class="page-title">
+          <h1>Dashboard</h1>
+          <p>系统运行状态与调用统计</p>
+        </div>
+        <div class="grid cols-4">
+          <div class="card">
+            <div class="label">食品数据库</div>
+            <div class="value" style="color:var(--ring-natural)">正常</div>
+            <div class="status-row"><span class="status-dot ok"></span><span class="status-text">OFF v2026-08-30</span></div>
+          </div>
+          <div class="card">
+            <div class="label">OCR 服务</div>
+            <div class="value" style="color:var(--ring-natural)">正常</div>
+            <div class="status-row"><span class="status-dot ok"></span><span class="status-text">第三方 + 本地</span></div>
+          </div>
+          <div class="card">
+            <div class="label">AI 服务</div>
+            <div class="value" style="color:var(--color-text-tertiary)">已关闭</div>
+            <div class="status-row"><span class="status-dot off"></span><span class="status-text">后台未启用</span></div>
+          </div>
+          <div class="card">
+            <div class="label">系统版本</div>
+            <div class="value">V1.0.0</div>
+            <div class="status-row"><span class="status-text">知识库 V2 · OCR V3</span></div>
+          </div>
+        </div>
+
+        <div class="grid cols-2 section-gap">
+          <div class="card">
+            <h3>调用统计</h3>
+            <div class="stat-list">
+              <div class="stat-line"><span class="k">OCR 今日调用</span><span class="v">328</span></div>
+              <div class="stat-line"><span class="k">OCR 失败次数</span><span class="v">12</span></div>
+              <div class="stat-line"><span class="k">AI 今日调用</span><span class="v">0</span></div>
+              <div class="stat-line"><span class="k">AI 失败次数</span><span class="v">0</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>最近系统错误</h3>
+            <div class="stat-list">
+              <div class="stat-line"><span class="k">14:02 第三方 OCR 超时</span><span class="v">重试成功</span></div>
+              <div class="stat-line"><span class="k">11:47 OFF 更新校验失败</span><span class="v">继续用旧版</span></div>
+              <div class="stat-line"><span class="k">09:20 图片清晰度不足</span><span class="v">已提示用户</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 数据源 ========== -->
+      <section id="datasources" class="page hidden">
+        <div class="page-title">
+          <h1>食品数据源</h1>
+          <p>配置查询顺序与启用状态，优先级数字小的先查</p>
+        </div>
+        <div class="card">
+          <table class="data">
+            <tr><th>名称</th><th>类型</th><th>优先级</th><th>状态</th><th>版本</th><th>更新时间</th><th>操作</th></tr>
+            <tr>
+              <td>Open Food Facts</td><td>OFF 本地镜像</td><td>1</td>
+              <td><span class="tag on">启用</span></td><td>v2026-08-30</td><td>2026-08-30 03:00</td>
+              <td><button class="btn-sm">编辑</button> <button class="btn-sm">测试连接</button></td>
+            </tr>
+            <tr>
+              <td>自建内部库</td><td>自定义</td><td>2</td>
+              <td><span class="tag on">启用</span></td><td>v1.2</td><td>2026-08-28</td>
+              <td><button class="btn-sm">编辑</button> <button class="btn-sm">测试连接</button></td>
+            </tr>
+            <tr>
+              <td>备选供应商 API</td><td>第三方</td><td>3</td>
+              <td><span class="tag off">停用</span></td><td>—</td><td>—</td>
+              <td><button class="btn-sm">编辑</button> <button class="btn-sm">启用</button></td>
+            </tr>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========== OFF ========== -->
+      <section id="off" class="page hidden">
+        <div class="page-title">
+          <h1>OFF 数据更新</h1>
+          <p>下载 → 校验 → 导入 → 建索引 → 验证 → 切换新版本</p>
+        </div>
+        <div class="grid cols-4">
+          <div class="card"><div class="label">当前版本</div><div class="value">v2026-08-30</div></div>
+          <div class="card"><div class="label">产品数量</div><div class="value">2,847,331</div></div>
+          <div class="card"><div class="label">数据大小</div><div class="value">4.2 GB</div></div>
+          <div class="card"><div class="label">上次更新</div><div class="value">03:00</div></div>
+        </div>
+        <div class="card section-gap">
+          <h3>更新配置</h3>
+          <div class="stat-list">
+            <div class="stat-line"><span class="k">自动更新</span><span class="v">已开启 · 每天</span></div>
+            <div class="stat-line"><span class="k">更新时间</span><span class="v">凌晨 03:00</span></div>
+          </div>
+          <div class="status-row" style="margin-top:16px; gap:12px">
+            <button class="btn-sm">检查更新</button>
+            <button class="btn-sm">立即强制更新</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== OCR ========== -->
+      <section id="ocr" class="page hidden">
+        <div class="page-title">
+          <h1>OCR 配置</h1>
+          <p>优先级：第三方 OCR → 本地 OCR → AI Vision（可选）</p>
+        </div>
+        <div class="grid cols-2">
+          <div class="card">
+            <h3>第三方 OCR</h3>
+            <div class="stat-list">
+              <div class="stat-line"><span class="k">服务商</span><span class="v">Provider-A</span></div>
+              <div class="stat-line"><span class="k">API 地址</span><span class="v">api.provider-a.com</span></div>
+              <div class="stat-line"><span class="k">超时时间</span><span class="v">10s</span></div>
+              <div class="stat-line"><span class="k">置信度阈值</span><span class="v">80%</span></div>
+              <div class="stat-line"><span class="k">状态</span><span class="v"><span class="tag on">启用</span></span></div>
+            </div>
+          </div>
+          <div class="card">
+            <h3>本地 OCR</h3>
+            <div class="stat-list">
+              <div class="stat-line"><span class="k">模型</span><span class="v">PaddleOCR V3</span></div>
+              <div class="stat-line"><span class="k">置信度阈值</span><span class="v">80%</span></div>
+              <div class="stat-line"><span class="k">运行状态</span><span class="v">正常</span></div>
+              <div class="stat-line"><span class="k">状态</span><span class="v"><span class="tag on">启用</span></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== AI ========== -->
+      <section id="ai" class="page hidden">
+        <div class="page-title">
+          <h1>AI 配置</h1>
+          <p>关闭时，配料解读与 AI Vision 均不调用</p>
+        </div>
+        <div class="card">
+          <h3>AI Vision</h3>
+          <div class="stat-list">
+            <div class="stat-line"><span class="k">启用状态</span><span class="v"><span class="tag off">已关闭</span></span></div>
+            <div class="stat-line"><span class="k">Provider</span><span class="v">—</span></div>
+            <div class="stat-line"><span class="k">Model</span><span class="v">—</span></div>
+            <div class="stat-line"><span class="k">调用次数</span><span class="v">0</span></div>
+            <div class="stat-line"><span class="k">成功 / 失败</span><span class="v">0 / 0</span></div>
+          </div>
+        </div>
+        <div class="card section-gap">
+          <h3>AI 配料解读</h3>
+          <div class="stat-list">
+            <div class="stat-line"><span class="k">调用范围</span><span class="v">仅基于用户确认配料</span></div>
+            <div class="stat-line"><span class="k">约束</span><span class="v">禁止编造 / 禁止医疗判断</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========== 知识库 ========== -->
+      <section id="knowledge" class="page hidden">
+        <div class="page-title">
+          <h1>知识库管理</h1>
+          <p>配料库 · 添加剂库 · 过敏原库</p>
+        </div>
+        <div class="grid cols-3">
+          <div class="card">
+            <div class="label">配料库</div>
+            <div class="value">12,480</div>
+            <div class="status-row"><button class="btn-sm">管理</button></div>
+          </div>
+          <div class="card">
+            <div class="label">添加剂库</div>
+            <div class="value">1,892</div>
+            <div class="status-row"><button class="btn-sm">管理</button></div>
+          </div>
+          <div class="card">
+            <div class="label">过敏原库</div>
+            <div class="value">36</div>
+            <div class="status-row"><button class="btn-sm">管理</button></div>
+          </div>
+        </div>
+        <div class="card section-gap">
+          <h3>最近更新的添加剂</h3>
+          <table class="data">
+            <tr><th>名称</th><th>INS/E 编号</th><th>类型</th><th>来源</th><th>更新时间</th></tr>
+            <tr><td>山梨酸钾</td><td>E202</td><td>防腐剂</td><td>GB 2760 / OFF</td><td>2026-08-28</td></tr>
+            <tr><td>黄原胶</td><td>E415</td><td>增稠剂</td><td>GB 2760 / OFF</td><td>2026-08-27</td></tr>
+            <tr><td>大豆卵磷脂</td><td>E322</td><td>乳化剂</td><td>GB 2760 / OFF</td><td>2026-08-25</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <!-- ========== 系统状态 ========== -->
+      <section id="system" class="page hidden">
+        <div class="page-title">
+          <h1>系统版本与更新日志</h1>
+          <p>所有版本信息与变更记录</p>
+        </div>
+        <div class="card">
+          <h3>版本</h3>
+          <div class="stat-list">
+            <div class="stat-line"><span class="k">Web 版本</span><span class="v">V1.0.0</span></div>
+            <div class="stat-line"><span class="k">数据库版本</span><span class="v">v2026-08-30</span></div>
+            <div class="stat-line"><span class="k">知识库版本</span><span class="v">V2.1</span></div>
+            <div class="stat-line"><span class="k">OCR 模型版本</span><span class="v">V3.2</span></div>
+          </div>
+        </div>
+        <div class="card section-gap">
+          <h3>更新日志</h3>
+          <div class="stat-list">
+            <div class="stat-line"><span class="k">V1.0.0 · 2026-08-31</span><span class="v">首个正式版</span></div>
+            <div class="stat-line"><span class="k">V0.9.0 · 2026-08-25</span><span class="v">Beta 公开测试</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // 侧边导航切换
+    document.querySelectorAll('.nav-item').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.nav-item').forEach(function (b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        var page = this.getAttribute('data-page');
+        document.querySelectorAll('.page').forEach(function (p) { p.classList.add('hidden'); });
+        document.getElementById(page).classList.remove('hidden');
+      });
+    });
+    function goHome() { alert('返回前台首页'); }
+  </script>
+</body>
+</html>

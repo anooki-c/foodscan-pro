@@ -1,0 +1,251 @@
+/* ============================================================
+ * design-tokens.css
+ * 来源：原型 DESIGN.md (Clinical Grade Analysis)
+ * 用途：V1 全部页面共享 CSS 变量
+ * 注意：颜色语义已按 docs/01-design-reconciliation.md 第 4 节重映射
+ * ============================================================ */
+
+:root {
+  /* ----------------------------------------------------------
+   * 颜色 · 表面 / 中性
+   * ---------------------------------------------------------- */
+  --color-surface: #f9f9ff;
+  --color-surface-dim: #cadaff;
+  --color-surface-bright: #f9f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f1f3ff;
+  --color-surface-container: #e8edff;
+  --color-surface-container-high: #e0e8ff;
+  --color-surface-container-highest: #d7e2ff;
+  --color-on-surface: #041b3c;
+  --color-on-surface-variant: #434654;
+  --color-outline: #737685;
+  --color-outline-variant: #c3c6d6;
+  --color-surface-variant: #d7e2ff;
+  --color-background: #f9f9ff;
+  --color-on-background: #041b3c;
+
+  /* 反色（深底场景，如空状态图） */
+  --color-inverse-surface: #1d3052;
+  --color-inverse-on-surface: #edf0ff;
+
+  /* ----------------------------------------------------------
+   * 配色 · 主 / 辅 / 强调
+   * 视觉方向：Wellness（淡紫 → 粉），与原 FoodScan Pro 临床蓝共存，
+   * 通过 [data-theme] 切换。
+   * ---------------------------------------------------------- */
+  --color-primary: #7C5BC9;
+  --color-primary-container: #F3E5F5;
+  --color-on-primary: #FFFFFF;
+  --color-on-primary-container: #2E1A5C;
+  --color-inverse-primary: #B39DDB;
+  --color-primary-fixed: #EDE7F6;
+  --color-primary-fixed-dim: #B39DDB;
+  --color-on-primary-fixed: #1A0E45;
+  --color-on-primary-fixed-variant: #4A2E8E;
+  --color-surface-tint: #7C5BC9;
+
+  /* Vitality Pink — 强调 / 高亮渐变端 */
+  --color-secondary: #EC4899;
+  --color-secondary-container: #FCE4EC;
+  --color-on-secondary: #FFFFFF;
+  --color-on-secondary-container: #8B0F50;
+  --color-secondary-fixed: #FCE4EC;
+  --color-secondary-fixed-dim: #F48FB1;
+  --color-on-secondary-fixed: #3F0420;
+  --color-on-secondary-fixed-variant: #B2145C;
+
+  /* Tech Lavender — 数据可视化 */
+  --color-tertiary: #5C6BC0;
+  --color-tertiary-container: #DDE3F8;
+  --color-on-tertiary: #FFFFFF;
+  --color-on-tertiary-container: #1A1F4A;
+  --color-tertiary-fixed: #E5DEFF;
+  --color-tertiary-fixed-dim: #9FA8DA;
+  --color-on-tertiary-fixed: #0E1140;
+  --color-on-tertiary-fixed-variant: #3B47A0;
+
+  /* Wellness 渐变（背景） */
+  --gradient-bg: linear-gradient(180deg, #EDE7F6 0%, #FCE4EC 60%, #F8D7E8 100%);
+  --gradient-accent: linear-gradient(135deg, #7C5BC9 0%, #EC4899 100%);
+  --gradient-soft: linear-gradient(135deg, #F3E5F5 0%, #FCE4EC 100%);
+  --gradient-card: linear-gradient(135deg, #EDE7F6 0%, #FCE4EC 100%);
+  --gradient-cool: linear-gradient(135deg, #5C6BC0 0%, #7C5BC9 100%);
+
+  /* Wellness 中性文本（在浅紫粉底上仍可读） */
+  --color-text-primary: #1A1626;
+  --color-text-secondary: #5C5470;
+  --color-text-tertiary: #8B8499;
+  --color-divider: rgba(124, 91, 201, 0.12);
+
+  /* ----------------------------------------------------------
+   * 颜色 · 语义标签（业务方指定）
+   * 天然 = 浅绿 · 加工 = 浅黄 · 添加剂 = 浅红 · 过敏原 = 浅紫
+   * ---------------------------------------------------------- */
+  --color-status-natural-bg: #E6F4EA;
+  --color-status-natural-fg: #1B5E20;
+  --color-status-natural-border: #A5D6A7;
+
+  --color-status-processed-bg: #FFF6DB;
+  --color-status-processed-fg: #8A4B00;
+  --color-status-processed-border: #FFE082;
+
+  --color-status-additive-bg: #FDE8E8;
+  --color-status-additive-fg: #B71C1C;
+  --color-status-additive-border: #FFABAB;
+
+  --color-status-allergen-bg: #F3E8FF;
+  --color-status-allergen-fg: #7C5BC9;
+  --color-status-allergen-border: #D1B8FF;
+
+  --color-status-warning-bg: #FFF4D6;
+  --color-status-warning-fg: #6E4D00;
+  --color-status-warning-border: #FFE08A;
+
+  --color-status-info-bg: #EDE7F6;
+  --color-status-info-fg: #4A2E8E;
+  --color-status-info-border: #B39DDB;
+
+  /* 系统色 */
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  /* ----------------------------------------------------------
+   * 字体 · 三栈
+   * ---------------------------------------------------------- */
+  --font-display: 'Manrope', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+
+  /* ----------------------------------------------------------
+   * 字号
+   * ---------------------------------------------------------- */
+  --text-display-lg: 48px;
+  --text-display-lg-lh: 60px;
+  --text-headline-lg: 32px;
+  --text-headline-lg-lh: 40px;
+  --text-headline-md: 24px;
+  --text-headline-md-lh: 32px;
+  --text-title-lg: 20px;
+  --text-title-lg-lh: 28px;
+  --text-title-md: 16px;
+  --text-title-md-lh: 24px;
+  --text-body-lg: 16px;
+  --text-body-lg-lh: 24px;
+  --text-body-md: 14px;
+  --text-body-md-lh: 20px;
+  --text-label-md: 12px;
+  --text-label-md-lh: 16px;
+  --text-label-sm: 10px;
+  --text-label-sm-lh: 14px;
+
+  /* 字重 */
+  --weight-bold: 700;
+  --weight-semibold: 600;
+  --weight-medium: 500;
+  --weight-regular: 400;
+
+  /* 字距 */
+  --tracking-tight: -0.02em;
+  --tracking-snug: -0.01em;
+  --tracking-wide: 0.05em;
+
+  /* ----------------------------------------------------------
+   * 圆角
+   * ---------------------------------------------------------- */
+  --radius-sm: 0.125rem;   /* 2px · 标签芯片 */
+  --radius-default: 0.25rem; /* 4px · 按钮 / 输入 */
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;     /* 8px · 卡片 / 弹窗 */
+  --radius-xl: 0.75rem;    /* 12px · 大容器 */
+  --radius-full: 9999px;
+
+  /* ----------------------------------------------------------
+   * 间距（4px 基线）
+   * ---------------------------------------------------------- */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* ----------------------------------------------------------
+   * 阴影
+   * ---------------------------------------------------------- */
+  --shadow-ambient: 0 8px 24px rgba(124, 91, 201, 0.10);
+  --shadow-card: 0 4px 16px rgba(124, 91, 201, 0.08);
+  --shadow-floating: 0 12px 32px rgba(236, 72, 153, 0.18);
+  --shadow-none: 0 0 0 0 transparent;
+
+  /* 玻璃面板 */
+  --backdrop-blur: blur(20px);
+
+  /* Wellness 大圆角（在原型 4-8px 之上另设一组） */
+  --radius-card: 24px;
+  --radius-thumb: 16px;
+  --radius-pill: 9999px;
+
+  /* ----------------------------------------------------------
+   * 网格
+   * ---------------------------------------------------------- */
+  --grid-columns: 12;
+  --grid-gutter: 24px;
+  --grid-margin: 32px;
+  --grid-max-width: 1440px;
+
+  /* ----------------------------------------------------------
+   * 触控目标
+   * ---------------------------------------------------------- */
+  --touch-target: 44px;
+
+  /* ----------------------------------------------------------
+   * 圆环图（用于"成分构成概览"中性可视化）
+   * ---------------------------------------------------------- */
+  --ring-natural: #66BB6A;
+  --ring-processed: #FFC24B;
+  --ring-additive: #E53935;
+  --ring-allergen: #9C6BDB;
+  --ring-track: rgba(124, 91, 201, 0.12);
+
+  /* ----------------------------------------------------------
+   * 动效
+   * ---------------------------------------------------------- */
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-short: 150ms;
+  --duration-medium: 240ms;
+  --duration-long: 360ms;
+
+  /* ----------------------------------------------------------
+   * Z 轴
+   * ---------------------------------------------------------- */
+  --z-sticky: 100;
+  --z-drawer: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+  --z-tooltip: 500;
+}
+
+/* ============================================================
+ * 响应式断点（注释形式，应用时使用媒体查询）
+ * ----------------------------------------------------------
+ *  Mobile:  < 768px    4 列 / 16px gutter / 16px margin
+ *  Tablet:  768-1439   8 列 / 16px gutter / 24px margin
+ *  Desktop: ≥ 1440px   12 列 / 24px gutter / 32px margin / max 1440
+ * ============================================================ */
+
+/* ============================================================
+ * 暗色预留（V1 不启用，仅声明变量便于后续切换）
+ * ============================================================ */
+@media (prefers-color-scheme: dark) {
+  /* V1 暂不启用暗色，留空 */
+}
