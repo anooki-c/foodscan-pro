@@ -12,9 +12,9 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# npm 镜像源（可选：国内构建慢时取消注释）
-# ARG NPM_REGISTRY=https://registry.npmmirror.com
-# RUN npm config set registry ${NPM_REGISTRY}
+# 可选 npm 镜像源（CI 慢网或国内构建时通过 --build-arg NPM_REGISTRY=... 注入）
+ARG NPM_REGISTRY
+RUN if [ -n "$NPM_REGISTRY" ]; then npm config set registry "$NPM_REGISTRY"; fi
 
 # 先复制依赖清单，利用层缓存
 COPY package.json package-lock.json ./
