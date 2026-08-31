@@ -6,12 +6,10 @@
 #   - push 版本 tag（v1.0.0 等）
 #   - 手动触发
 #
-# 产物：
+# 产物（仅 amd64）：
 #   - ghcr.io/<owner>/foodscan-pro:latest
 #   - ghcr.io/<owner>/foodscan-pro:<version>（打 tag 时）
-#   - ghcr.io/<owner>/foodscan-pro:<arch>-sha-<commit>
-#
-# 平台：linux/amd64 + linux/arm64（两个独立 job 并行，避免 QEMU 串行模拟）
+#   - ghcr.io/<owner>/foodscan-pro:sha-<commit>
 # ============================================================
 
 name: Build Docker Image
@@ -27,22 +25,10 @@ env:
 
 jobs:
   build:
-    name: Build (${{ matrix.platform.label }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
-
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - label: linux-amd64
-            target: linux/amd64
-            arch: amd64
-          - label: linux-arm64
-            target: linux/arm64
-            arch: arm64
 
     steps:
       - name: Checkout
@@ -72,8 +58,7 @@ jobs:
           images: ${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ matrix.platform.arch }},enable={{is_default_branch}}
-            type=raw,value=${{ matrix.platform.arch }}-sha-${{ github.sha }}
+            type=sha,prefix=sha-
             type=ref,event=tag
             type=ref,event=branch
           flavor: |
@@ -85,7 +70,7 @@ jobs:
           context: app/
           file: app/Dockerfile
           push: true
-          platforms: ${{ matrix.platform.target }}
+          platforms: linux/amd64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

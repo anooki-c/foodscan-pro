@@ -104,7 +104,7 @@ npm run start      # 生产运行
 **方式 A（推荐）· GitHub Actions 自动构建 → GHCR 拉取**
 
 ```bash
-# 1. 推代码到 GitHub（触发 Actions 自动构建 amd64+arm64 镜像 → GHCR）
+# 1. 推代码到 GitHub（触发 Actions 自动构建 amd64 镜像 → GHCR）
 git add . && git commit -m "init" && git push origin main
 # 2. GHCR 镜像设为 Public
 # 3. 群晖拉取运行
