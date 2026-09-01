@@ -159,36 +159,34 @@ sudo docker compose up -d --build
 
 ---
 
-## 6. 环境变量（OCR / AI / OFF）
+## 6. 配置 OCR / AI（后台管理页）
 
-镜像默认 **OFF 开启、OCR/AI 关闭（自动回退 mock）**。启用真实服务：
+> **推荐方式：无需重启、无需重建镜像。** OCR 与 AI 配置已迁移到后台管理页，持久化在挂载卷 `data/config.json`，修改后立即生效。
 
-在 compose 的 `environment` 里填写并重启（方式 A 改 `docker-compose.ghcr.yml`，方式 B 改 `docker-compose.yml`）：
+### 6.1 网页配置（推荐）
+
+1. 打开 `http://<群晖IP>:3001/admin/ocr`，填写服务商 / API 地址 / Key，点「保存配置」
+2. 打开 `http://<群晖IP>:3001/admin/ai`，同样填写后保存
+3. 首页状态（Dashboard）会实时反映开关状态
+
+### 6.2 环境变量（仅首次默认值）
+
+`OFF_ENABLED` 及 `OCR_*` / `AI_*` 环境变量仅在**首次启动、尚无配置文件时**作为默认值。一旦后台保存过配置，以后台文件为准：
 
 ```yaml
 environment:
   OFF_ENABLED: "true"
-  OCR_ENABLED: "true"
-  OCR_PROVIDER: "provider-a"
-  OCR_API_URL: "https://your-ocr-provider.example.com/v1/recognize"
-  OCR_API_KEY: "你的Key"
-  AI_ENABLED: "true"
-  AI_PROVIDER: "openai-compatible"
-  AI_API_URL: "https://api.example.com/v1/chat/completions"
-  AI_API_KEY: "你的Key"
+  OCR_ENABLED: "false"
+  AI_ENABLED: "false"
 ```
 
-方式 A 生效：
-```bash
-sudo docker compose -f docker-compose.ghcr.yml up -d
-```
-
-> 密钥只放在群晖的 compose 环境变量里，**不写进代码、不推 GitHub**。
+> 后台保存的 API Key 存在群晖挂载卷 `data/config.json` 里，**不写进代码、不推 GitHub**。如要彻底清空配置：删除该文件后重启容器即可恢复环境变量默认值。
 
 ---
 
 ## 7. 数据持久化
 
+- **OCR/AI 配置**：`data/config.json`（挂载卷），后台修改后立即生效，重建容器不丢失。
 - **历史记录**：浏览器 LocalStorage，服务端无需持久化。
 - **数据卷**：compose 已声明 `foodscan_data` 挂载到 `/app/data`。
 

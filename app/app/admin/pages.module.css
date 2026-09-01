@@ -181,3 +181,81 @@ table.data tr:last-child td {
   border-color: transparent;
   font-weight: 600;
 }
+
+/* ---- 配置表单 ---- */
+.switchRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font: 600 13px/20px var(--font-body);
+  color: var(--color-text-primary);
+}
+.switchRow input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+@media (max-width: 900px) {
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.field label {
+  font: 500 11px/16px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+}
+.field input {
+  height: 40px;
+  border-radius: var(--radius-default);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-container-lowest);
+  padding: 0 12px;
+  font: 500 13px/1 var(--font-body);
+  color: var(--color-text-primary);
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-fixed);
+}
+.btnPrimary {
+  height: 40px;
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--gradient-accent);
+  color: white;
+  font: 600 13px/20px var(--font-body);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.25);
+}
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.formMsg {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: var(--radius-default);
+  background: var(--color-status-natural-bg);
+  color: var(--color-status-natural-fg);
+  font: 500 12px/18px var(--font-body);
+}
+.formErr {
+  background: var(--color-status-additive-bg);
+  color: var(--color-status-additive-fg);
+}

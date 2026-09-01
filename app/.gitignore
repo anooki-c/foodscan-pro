@@ -28,6 +28,10 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# 运行时配置（后台管理写入，含 API Key，绝不提交）
+/data/
+/data/config.json
+
 # vercel
 .vercel
 

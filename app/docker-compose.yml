@@ -4,6 +4,10 @@
 #   cd /volume1/docker/foodscan/app
 #   docker compose up -d --build
 # 或在群晖 Container Manager → 项目 → 新建 → 导入本文件
+#
+# ⚠️ OCR / AI 配置请到后台管理页（/admin/ocr、/admin/ai）配置，
+#    持久化在 data/config.json（挂载卷），修改后立即生效。
+#    下方 OCR_* / AI_* 环境变量仅作为首次启动默认值。
 # ============================================================
 
 services:
@@ -25,7 +29,7 @@ services:
       OFF_ENABLED: "true"
       # OFF_API_URL: "https://world.openfoodfacts.org"
 
-      # ---- 第三方 OCR（PRD §7.4，未配置回退本地模拟） ----
+      # ---- 第三方 OCR（可选默认值，后台可改） ----
       OCR_ENABLED: "false"
       # OCR_PROVIDER: "provider-a"
       # OCR_API_URL: "https://your-ocr-provider.example.com/v1/recognize"
@@ -33,16 +37,14 @@ services:
       OCR_TIMEOUT_MS: "10000"
       OCR_CONFIDENCE_THRESHOLD: "80"
 
-      # ---- AI 配料解读（PRD §14，未配置回退 mock） ----
+      # ---- AI 配料解读（可选默认值，后台可改） ----
       AI_ENABLED: "false"
       # AI_PROVIDER: "openai-compatible"
       # AI_API_URL: "https://api.example.com/v1/chat/completions"
       # AI_API_KEY: "xxx"
       AI_TIMEOUT_MS: "15000"
     volumes:
-      # 持久化（可选）：历史记录在浏览器本地，服务端无需持久化；
-      # 如需挂载自定义数据可取消注释
-      # - ./data:/app/data
+      # 运行时配置持久化：后台修改的 OCR/AI 配置（data/config.json）
       - foodscan_data:/app/data
     networks:
       - foodscan-net

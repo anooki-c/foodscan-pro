@@ -85,3 +85,37 @@ export async function fetchKnowledge(
     return null;
   }
 }
+
+/** 后台：读取完整配置（密钥脱敏） */
+export async function fetchAdminConfig(): Promise<{
+  offEnabled: boolean;
+  ocr: { provider: string; apiUrl: string; apiKey: string; enabled: boolean; timeoutMs: number; confidenceThreshold: number };
+  ai: { provider: string; apiUrl: string; apiKey: string; enabled: boolean; timeoutMs: number };
+} | null> {
+  try {
+    const res = await fetch("/api/admin/config");
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.config ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/** 后台：保存配置（部分字段更新） */
+export async function saveAdminConfig(patch: {
+  offEnabled?: boolean;
+  ocr?: Partial<{ provider: string; apiUrl: string; apiKey: string; enabled: boolean; timeoutMs: number; confidenceThreshold: number }>;
+  ai?: Partial<{ provider: string; apiUrl: string; apiKey: string; enabled: boolean; timeoutMs: number }>;
+}): Promise<{ ok: boolean; error?: string; config?: unknown }> {
+  try {
+    const res = await fetch("/api/admin/config", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    });
+    return await res.json();
+  } catch {
+    return { ok: false, error: "网络错误" };
+  }
+}

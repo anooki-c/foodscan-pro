@@ -42,6 +42,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # public（manifest / sw.js / 字体 / 图标）
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# 运行时配置目录（后台 OCR/AI 配置持久化在 data/config.json）
+RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
+
 USER nextjs
 EXPOSE 3000
 
