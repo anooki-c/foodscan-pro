@@ -27,6 +27,7 @@ export interface AppConfig {
     provider: string;
     apiUrl: string;
     apiKey: string;
+    model: string;
     enabled: boolean;
     timeoutMs: number;
   };
@@ -48,6 +49,7 @@ export function envDefaults(): AppConfig {
       provider: process.env.AI_PROVIDER ?? "none",
       apiUrl: process.env.AI_API_URL ?? "",
       apiKey: process.env.AI_API_KEY ?? "",
+      model: process.env.AI_MODEL ?? "gpt-4o-mini",
       enabled: (process.env.AI_ENABLED ?? "false") === "true",
       timeoutMs: Number(process.env.AI_TIMEOUT_MS ?? 15000),
     },
@@ -82,6 +84,7 @@ export function loadConfig(): AppConfig {
       provider: saved.ai?.provider ?? defaults.ai.provider,
       apiUrl: saved.ai?.apiUrl ?? defaults.ai.apiUrl,
       apiKey: saved.ai?.apiKey ?? defaults.ai.apiKey,
+      model: saved.ai?.model ?? defaults.ai.model,
       enabled: saved.ai?.enabled ?? defaults.ai.enabled,
       timeoutMs: saved.ai?.timeoutMs ?? defaults.ai.timeoutMs,
     },

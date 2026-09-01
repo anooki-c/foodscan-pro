@@ -9,6 +9,9 @@ build
 .env*.local
 *.pem
 
+# 运行时数据（config.json 含密钥、foodscan.db 含本地扫描记录，均在容器内卷生成）
+data
+
 # 日志与缓存
 npm-debug.log*
 yarn-debug.log*

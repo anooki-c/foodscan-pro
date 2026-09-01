@@ -12,6 +12,10 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# better-sqlite3 为原生模块：优先使用官方预编译二进制（linux-musl），
+# 预编译缺失时回退到源码编译，因此安装编译工具链。
+RUN apk add --no-cache python3 make g++
+
 # 可选 npm 镜像源（CI 慢网或国内构建时通过 --build-arg NPM_REGISTRY=... 注入）
 ARG NPM_REGISTRY
 RUN if [ -n "$NPM_REGISTRY" ]; then npm config set registry "$NPM_REGISTRY"; fi

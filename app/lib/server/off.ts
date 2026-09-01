@@ -1,10 +1,14 @@
 import { getServerConfig } from "./config";
+import { getOffCache, setOffCache } from "./db";
 import type { Ingredient, Product } from "../types";
 
 /**
  * Open Food Facts 客户端（V1 默认数据源，PRD §6.4）
  * 官方公开 API：https://world.openfoodfacts.org/api/v2/product/{barcode}.json
  */
+
+/** OFF 查询结果本地缓存 TTL：1 小时（SQLite off_cache 表，后台可一键清除） */
+const OFF_CACHE_TTL_MS = 60 * 60 * 1000;
 
 interface OffProductResponse {
   status: number;
@@ -23,25 +27,32 @@ interface OffProductResponse {
 
 const OFF_API = process.env.OFF_API_URL ?? "https://world.openfoodfacts.org";
 
-/** 按条码查询产品，返回标准化 Product + 原始配料文本 */
+/** 按条码查询产品，返回标准化 Product + 原始配料文本（SQLite 缓存 1 小时） */
 export async function queryProductByBarcode(
   barcode: string
 ): Promise<{ product: Product; ingredientText: string } | null> {
   const cfg = getServerConfig();
   if (!cfg.offEnabled) return null;
 
-  const res = await fetch(`${OFF_API}/api/v2/product/${barcode}.json`, {
-    next: { revalidate: 3600 }, // 缓存 1 小时
-  });
+  // 本地缓存命中（1 小时 TTL，未命中结果同样缓存，避免重复打 OFF）
+  const cached = getOffCache(barcode);
+  if (cached && Date.now() - cached.fetched_at < OFF_CACHE_TTL_MS) {
+    return cached.payload as { product: Product; ingredientText: string } | null;
+  }
+
+  const res = await fetch(`${OFF_API}/api/v2/product/${barcode}.json`);
   if (!res.ok) return null;
   const data: OffProductResponse = await res.json();
-  if (data.status !== 1 || !data.product) return null;
+  if (data.status !== 1 || !data.product) {
+    setOffCache(barcode, null);
+    return null;
+  }
 
   const p = data.product;
   const ingredientText =
     p.ingredients_text_zh ?? p.ingredients_text ?? "";
 
-  return {
+  const payload: { product: Product; ingredientText: string } = {
     product: {
       id: `off-${data.code ?? barcode}`,
       name: p.product_name || `产品 ${barcode}`,
@@ -53,6 +64,8 @@ export async function queryProductByBarcode(
     },
     ingredientText,
   };
+  setOffCache(barcode, payload);
+  return payload;
 }
 
 /** 简易本地 OCR 兜底：从文本拆分配料（真实接入时替换为第三方 OCR API） */
@@ -109,7 +122,8 @@ export async function callThirdPartyOcr(
 
 /**
  * AI 配料解读（PRD §14）
- * 未配置时返回 null → 前端展示 mock 文案。
+ * 未配置时返回 null → 前端展示兜底文案。
+ * 按 OpenAI 兼容 chat/completions 协议调用（后台 /admin/ai 的 API 地址示例即 /v1/chat/completions）。
  */
 export async function callAiSummary(input: {
   productName: string;
@@ -120,6 +134,17 @@ export async function callAiSummary(input: {
   const cfg = getServerConfig();
   if (!cfg.ai.enabled || !cfg.ai.apiUrl || !cfg.ai.apiKey) return null;
 
+  const userPrompt = [
+    `食品名称：${input.productName}`,
+    `配料（按包装顺序）：${input.ingredients.join("、") || "无"}`,
+    input.additiveTypes.length
+      ? `添加剂类型：${input.additiveTypes.join("、")}`
+      : "",
+    input.allergens.length ? `潜在过敏原：${input.allergens.join("、")}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), cfg.ai.timeoutMs);
   try {
@@ -129,12 +154,25 @@ export async function callAiSummary(input: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${cfg.ai.apiKey}`,
       },
-      body: JSON.stringify({ ...input, instructions: NEUTRAL_INSTRUCTIONS }),
+      body: JSON.stringify({
+        model: cfg.ai.model || "gpt-4o-mini",
+        messages: [
+          { role: "system", content: NEUTRAL_INSTRUCTIONS },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0.3,
+      }),
       signal: controller.signal,
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return data.summary ?? data.text ?? null;
+    // OpenAI chat/completions 标准响应；兼容自定义网关的 summary / text 字段
+    return (
+      data.choices?.[0]?.message?.content ??
+      data.summary ??
+      data.text ??
+      null
+    );
   } catch {
     return null;
   } finally {

@@ -9,6 +9,7 @@ interface AiForm {
   provider: string;
   apiUrl: string;
   apiKey: string;
+  model: string;
   timeoutMs: number;
 }
 
@@ -17,6 +18,7 @@ const EMPTY: AiForm = {
   provider: "",
   apiUrl: "",
   apiKey: "",
+  model: "gpt-4o-mini",
   timeoutMs: 15000,
 };
 
@@ -35,6 +37,7 @@ export default function AiPage() {
           provider: cfg.ai.provider,
           apiUrl: cfg.ai.apiUrl,
           apiKey: cfg.ai.apiKey,
+          model: cfg.ai.model,
           timeoutMs: cfg.ai.timeoutMs,
         });
       }
@@ -54,6 +57,7 @@ export default function AiPage() {
         provider: form.provider,
         apiUrl: form.apiUrl,
         apiKey: form.apiKey && !form.apiKey.includes("•") ? form.apiKey : undefined,
+        model: form.model,
         timeoutMs: Number(form.timeoutMs),
       },
     });
@@ -71,7 +75,9 @@ export default function AiPage() {
     <div>
       <div className={styles.pageTitle}>
         <h1>AI 配置</h1>
-        <p>配置保存在服务器 data/config.json，立即生效，无需重启。关闭时配料解读回退 mock 文案。</p>
+        <p>
+          配置保存在服务器 data/config.json，立即生效，无需重启。关闭时配料解读回退兜底文案。API 地址需为 OpenAI 兼容的 chat/completions 接口（如 https://api.deepseek.com/v1/chat/completions）。
+        </p>
       </div>
 
       <div className={styles.card}>
@@ -105,6 +111,14 @@ export default function AiPage() {
               value={form.apiUrl}
               onChange={(e) => set("apiUrl", e.target.value)}
               placeholder="https://api.example.com/v1/chat/completions"
+            />
+          </div>
+          <div className={styles.field}>
+            <label>模型</label>
+            <input
+              value={form.model}
+              onChange={(e) => set("model", e.target.value)}
+              placeholder="gpt-4o-mini / deepseek-chat 等"
             />
           </div>
           <div className={styles.field}>

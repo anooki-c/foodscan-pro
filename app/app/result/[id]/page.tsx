@@ -10,9 +10,28 @@ import CompositionRing from "@/components/CompositionRing";
 import IngredientDetailSheet from "@/components/IngredientDetailSheet";
 import AdditiveDetailSheet from "@/components/AdditiveDetailSheet";
 import { useAnalysisStore } from "@/store/analysis";
-import { fetchAiSummary } from "@/lib/services/api";
+import { fetchAiSummary, saveScanRecord } from "@/lib/services/api";
 import type { Ingredient } from "@/lib/types";
 import styles from "./page.module.css";
+
+/** AI 解读结果缓存（按分析记录 id，命中即不再调用 AI，节约 token） */
+const AI_CACHE_PREFIX = "foodscan-ai-summary:";
+
+function readAiCache(id: string): string | null {
+  try {
+    return localStorage.getItem(AI_CACHE_PREFIX + id);
+  } catch {
+    return null;
+  }
+}
+
+function writeAiCache(id: string, summary: string) {
+  try {
+    localStorage.setItem(AI_CACHE_PREFIX + id, summary);
+  } catch {
+    // 隐私模式或容量满时静默忽略
+  }
+}
 
 export default function ResultPage() {
   const params = useParams<{ id: string }>();
@@ -56,24 +75,65 @@ export default function ResultPage() {
     setTimeout(() => setShareTip(""), 2500);
   };
 
-  const loadAi = useCallback(async () => {
-    if (!analysis) return;
-    setAiLoading(true);
-    const result = await fetchAiSummary({
-      productName: analysis.product.name,
-      ingredients: analysis.ingredients.map((i) => i.finalText),
-      additiveTypes: Object.keys(analysis.additiveStats),
-      allergens: Object.keys(analysis.allergenStats),
-    });
-    setAiSummary(result ?? analysis.aiSummary ?? null);
-    setAiLoading(false);
-  }, [analysis]);
+  const loadAi = useCallback(
+    async (force = false) => {
+      if (!analysis) return;
+      // 非强制刷新时优先复用缓存，0 token
+      if (!force) {
+        const cached = readAiCache(analysis.id);
+        if (cached) {
+          setAiSummary(cached);
+          return;
+        }
+      }
+      setAiLoading(true);
+      const result = await fetchAiSummary({
+        productName: analysis.product.name,
+        ingredients: analysis.ingredients.map((i) => i.finalText),
+        additiveTypes: Object.keys(analysis.additiveStats),
+        allergens: Object.keys(analysis.allergenStats),
+      });
+      const summary = result ?? analysis.aiSummary ?? null;
+      setAiSummary(summary);
+      if (summary) writeAiCache(analysis.id, summary);
+      setAiLoading(false);
+    },
+    [analysis]
+  );
 
   useEffect(() => {
+    // 不再自动调用 AI：改为手动触发（节约 token）；有缓存则直接展示
     setAiSummary(analysis?.aiSummary ?? null);
-    loadAi();
+    if (analysis) {
+      const cached = readAiCache(analysis.id);
+      if (cached) setAiSummary(cached);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [analysis?.id, loadAi]);
+  }, [analysis?.id]);
+
+  // 扫描历史持久化（analysis_id 唯一，重复访问幂等）
+  useEffect(() => {
+    if (!analysis) return;
+    saveScanRecord({
+      analysisId: analysis.id,
+      productName: analysis.product.name,
+      barcode: analysis.product.barcode ?? "",
+      dataSource: analysis.product.dataSource ?? "",
+      ingredientCount: analysis.ingredients.length,
+      snapshot: {
+        product: analysis.product,
+        ingredients: analysis.ingredients.map((i) => ({
+          originalText: i.originalText,
+          finalText: i.finalText,
+          category: i.category,
+          additiveType: i.additiveType,
+          allergens: i.allergens,
+        })),
+        confirmedAt: analysis.confirmedAt,
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analysis?.id]);
 
   if (!analysis) {
     return (
@@ -231,9 +291,9 @@ export default function ResultPage() {
             <span style={{ font: "600 13px/20px var(--font-display)" }}>配料解读</span>
             <span
               className={`${styles.aiRefresh} material-symbols-rounded ${aiLoading ? styles.aiSpinning : ""}`}
-              onClick={loadAi}
+              onClick={() => void loadAi(true)}
               role="button"
-              aria-label="刷新解读"
+              aria-label="生成 AI 解读"
             >
               refresh
             </span>
@@ -241,7 +301,10 @@ export default function ResultPage() {
           {aiLoading ? (
             <p>AI 正在解读配料…</p>
           ) : (
-            <p>{aiSummary ?? "AI 分析暂时不可用。基础配料信息仍然可以查看。"}</p>
+            <p>
+              {aiSummary ??
+                "还没有 AI 解读。点击右上角刷新按钮按需生成，基础配料信息已可直接查看。"}
+            </p>
           )}
           <p className={styles.aiNote}>AI 基于已确认配料与知识库进行解释，不构成医疗或营养建议。</p>
         </div>

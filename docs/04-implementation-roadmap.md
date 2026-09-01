@@ -83,6 +83,34 @@
 
 ## 4. 数据模型骨架
 
+> ✅ V1 已落地：SQLite（better-sqlite3，`data/foodscan.db`，Docker 挂载卷持久化）。
+> 实现见 `app/lib/server/db.ts`，工程化取舍如下：
+> - **kb_entries**：配料/添加剂/过敏原合一表，`kind` 区分；配料与添加剂的异构字段
+>   （配料：processingNature/detail/allergens；添加剂：safetyNote/caution/audience 等）
+>   用 `aliases` / `extra` 两个 JSON 列承载，统一一套 CRUD，后台可直接管理。
+> - **scan_records**：扫描历史，`analysis_id` 唯一（幂等写入），快照存 JSON。
+> - **compare_sets**：V1 已建表，UI 暂仍用 localStorage，后续迁移。
+> - 种子数据来自 `app/lib/knowledge.ts`（159 条）+ 内置 8 大类过敏原；
+>   `meta.kb_seed_version` 控制升级增量播种，后台可一键「恢复内置数据」。
+
+```text
+kb_entries               知识库条目（配料 / 添加剂 / 过敏原）
+  id, kind(ingredient|additive|allergen), name, aliases[],
+  category, ins_e, one_liner, purpose, extra{}, source, is_builtin, updated_at
+
+scan_record              历史分析
+  id, analysis_id(UNIQUE), product_name, barcode, data_source,
+  ingredient_count, snapshot{}, created_at
+
+compare_set              对比组合（V1 建表，暂未启用）
+  id, name, analysis_ids[], created_at, updated_at
+
+meta                     元信息
+  key, value（如 kb_seed_version）
+```
+
+规划参考（原表设计，供后续拆表/检索演进）：
+
 ```text
 food_product            食品（来自数据库或手动）
   id, name, brand, barcode, source, source_updated_at, spec

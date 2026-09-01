@@ -69,8 +69,8 @@ export function buildAnalysis(id: string, product: Product, ingredients: Ingredi
     confirmedAt: Date.now(),
     additiveStats,
     allergenStats,
-    aiSummary:
-      "这款食品主要由燕麦、糖类和植物油组成，另外添加了山梨酸钾、黄原胶等食品添加剂。配料中发现乳和大豆相关成分，相关人群需要留意。配料表本身无法判断实际摄入量及整体营养价值，建议结合营养成分表综合判断。",
+    // 注意：不再内嵌写死的 mock 解读文案。
+    // AI 解读由结果页手动触发（/api/ai/summary），未配置时服务端返回基于真实配料动态生成的兜底文案。
   };
 }
 

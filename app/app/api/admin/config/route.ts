@@ -47,6 +47,7 @@ export async function PUT(req: Request) {
         patch.ai?.apiKey && !patch.ai.apiKey.includes("•")
           ? patch.ai.apiKey
           : current.ai.apiKey,
+      model: patch.ai?.model ?? current.ai.model,
       enabled: patch.ai?.enabled ?? current.ai.enabled,
       timeoutMs: patch.ai?.timeoutMs ?? current.ai.timeoutMs,
     },
