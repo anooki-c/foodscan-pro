@@ -137,10 +137,11 @@
   flex-wrap: wrap;
 }
 .actions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
   gap: 6px;
   flex-shrink: 0;
+  justify-content: end;
 }
 .miniBtn,
 .miniBtnPrimary,

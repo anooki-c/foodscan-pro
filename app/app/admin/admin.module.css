@@ -98,3 +98,55 @@
   flex: 1;
   min-width: 0;
 }
+
+/* ---------- 移动端适配：侧边栏转顶部横向菜单 ---------- */
+@media (max-width: 768px) {
+  .appbar {
+    padding: 0 16px;
+  }
+  .brandName {
+    display: none;
+  }
+  .backBtn {
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .layout {
+    flex-direction: column;
+    padding: 12px 16px 24px;
+    gap: 8px;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    gap: 8px;
+    position: sticky;
+    top: 72px;
+    z-index: var(--z-sticky);
+    overflow-x: auto;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .navItem {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid var(--color-divider);
+    font-size: 13px;
+  }
+  .navItem:hover {
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .content {
+    width: 100%;
+  }
+}

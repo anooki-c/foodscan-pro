@@ -7,42 +7,36 @@ import { fetchProductByBarcode } from "@/lib/services/api";
 import { useAnalysisStore } from "@/store/analysis";
 import styles from "./page.module.css";
 
-/** BarcodeDetector 最小类型（部分 TS lib.dom 尚未收录） */
-interface DetectorCode {
-  rawValue: string;
-}
-interface Detector {
-  detect(video: HTMLVideoElement): Promise<DetectorCode[]>;
-}
-
-/** 食品条码常见格式 */
-const DETECT_FORMATS = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"];
-
 export default function ScanPage() {
   const [barcode, setBarcode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [scanning, setScanning] = useState(false);
 
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const detectorRef = useRef<Detector | null>(null);
-  const rafRef = useRef(0);
+  const scannerRef = useRef<{ stop: () => Promise<void>; clear: () => void } | null>(null);
+  const stopRef = useRef(false);
 
   // 组件卸载时释放摄像头
   useEffect(() => {
     return () => {
-      cancelAnimationFrame(rafRef.current);
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
+      stopRef.current = true;
+      void scannerRef.current?.stop().then(() => scannerRef.current?.clear());
+      scannerRef.current = null;
     };
   }, []);
 
-  const stopCamera = () => {
-    cancelAnimationFrame(rafRef.current);
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
+  const stopCamera = async () => {
     setScanning(false);
+    const scanner = scannerRef.current;
+    scannerRef.current = null;
+    if (scanner) {
+      try {
+        await scanner.stop();
+        scanner.clear();
+      } catch {
+        // 未启动时 stop 会抛错，忽略
+      }
+    }
   };
 
   /** 查询 OFF；preset 供摄像头扫码命中后直接传入 */
@@ -71,69 +65,53 @@ export default function ScanPage() {
     window.location.href = "/confirm?source=barcode";
   };
 
-  /** 实时检测循环：命中条码即停止并查询 */
-  const detectLoop = async () => {
-    const detector = detectorRef.current;
-    const video = videoRef.current;
-    if (!detector || !video || video.readyState < 2) {
-      rafRef.current = requestAnimationFrame(detectLoop);
-      return;
-    }
-    try {
-      const codes = await detector.detect(video);
-      const hit = codes.find((c) => /^\d{8,14}$/.test(c.rawValue));
-      if (hit) {
-        const code = hit.rawValue;
-        stopCamera();
-        setBarcode(code);
-        void handleScan(code);
-        return;
-      }
-    } catch {
-      // 单帧检测失败可忽略，继续下一帧
-    }
-    rafRef.current = requestAnimationFrame(detectLoop);
-  };
-
   const startCamera = async () => {
     if (scanning) return;
     setError("");
-    if (typeof window === "undefined") return;
 
-    const w = window as unknown as {
-      BarcodeDetector?: new (opts?: { formats?: string[] }) => Detector;
-    };
-    if (!w.BarcodeDetector) {
+    // getUserMedia 仅在安全上下文（HTTPS / localhost）可用
+    if (typeof window !== "undefined" && !window.isSecureContext) {
       setError(
-        "当前浏览器不支持摄像头扫码，请直接输入条码数字，或换用 Chrome / Edge 浏览器。"
+        "当前页面通过 HTTP 访问，浏览器禁止调用摄像头。请改用 HTTPS 访问本应用，或直接输入条码数字。"
       );
       return;
     }
 
-    // 部分浏览器不接受 formats 参数，构造失败时用默认参数重试
-    let detector: Detector;
     try {
-      detector = new w.BarcodeDetector({ formats: DETECT_FORMATS });
-    } catch {
-      detector = new w.BarcodeDetector();
-    }
-    detectorRef.current = detector;
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-      streamRef.current = stream;
+      const { Html5Qrcode } = await import("html5-qrcode");
+      const scanner = new Html5Qrcode("scan-qr-region");
+      scannerRef.current = scanner;
       setScanning(true);
-      const video = videoRef.current;
-      if (video) {
-        video.srcObject = stream;
-        await video.play();
-        rafRef.current = requestAnimationFrame(detectLoop);
-      }
-    } catch {
+
+      await scanner.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 240, height: 240 },
+          aspectRatio: 1,
+        },
+        (decodedText) => {
+          const code = decodedText.replace(/[^\d]/g, "");
+          if (!/^\d{8,14}$/.test(code)) return;
+          void (async () => {
+            await stopCamera();
+            setBarcode(code);
+            void handleScan(code);
+          })();
+        },
+        () => {
+          // 单帧未识别属正常，忽略
+        }
+      );
+    } catch (err) {
+      setScanning(false);
+      const msg = err instanceof Error ? err.message : "";
       setError(
-        "无法访问摄像头：请检查浏览器权限设置（需允许摄像头），或直接手动输入条码。"
+        msg.includes("NotAllowedError") || msg.includes("permission")
+          ? "无法访问摄像头：请检查浏览器权限设置（需允许摄像头），或直接手动输入条码。"
+          : msg.includes("NotFoundError")
+            ? "未检测到可用摄像头，请确认设备已开启摄像头，或直接手动输入条码。"
+            : "摄像头启动失败，请直接手动输入条码数字。"
       );
     }
   };
@@ -157,14 +135,7 @@ export default function ScanPage() {
               aria-label="调起摄像头扫码"
               onKeyDown={(e) => e.key === "Enter" && void startCamera()}
             >
-              {scanning && (
-                <video
-                  ref={videoRef}
-                  className={styles.video}
-                  playsInline
-                  muted
-                />
-              )}
+              <div id="scan-qr-region" className={styles.video} />
               <span className={`${styles.corner} ${styles.tl}`} />
               <span className={`${styles.corner} ${styles.tr}`} />
               <span className={`${styles.corner} ${styles.bl}`} />
@@ -177,7 +148,7 @@ export default function ScanPage() {
                 : "点击扫描框调起摄像头；也可直接输入条码数字查询"}
             </p>
             {scanning && (
-              <button className={styles.stopCam} onClick={stopCamera}>
+              <button className={styles.stopCam} onClick={() => void stopCamera()}>
                 关闭摄像头
               </button>
             )}

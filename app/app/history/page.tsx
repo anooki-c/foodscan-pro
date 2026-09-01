@@ -119,7 +119,22 @@ export default function HistoryPage() {
                   <button className={styles.miniBtnPrimary} onClick={() => (window.location.href = `/result/${h.id}`)}>
                     详情
                   </button>
-                  <button className={styles.miniBtn} onClick={() => toggleCompare(h.id)}>
+                  <button
+                    className={styles.miniBtn}
+                    onClick={() => {
+                      useAnalysisStore.getState().setDraftIngredients(h.ingredients);
+                      window.location.href = `/confirm?source=edit&id=${h.id}`;
+                    }}
+                  >
+                    编辑配料表
+                  </button>
+                  <button
+                    className={styles.miniBtn}
+                    onClick={() => {
+                      toggleCompare(h.id);
+                      window.location.href = "/compare";
+                    }}
+                  >
                     + 对比
                   </button>
                   <button className={styles.miniBtnDanger} onClick={() => removeHistory(h.id)}>

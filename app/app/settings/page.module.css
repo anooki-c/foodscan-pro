@@ -32,6 +32,49 @@
   margin: 0;
 }
 
+.adminCard {
+  margin: 0 20px 20px;
+  padding: 16px;
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+.adminCard:hover {
+  background: rgba(255, 255, 255, 0.45);
+}
+.adminIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-thumb);
+  background: var(--gradient-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-floating);
+}
+.adminInfo {
+  flex: 1;
+  min-width: 0;
+}
+.adminTitle {
+  font: 600 14px/20px var(--font-display);
+}
+.adminSub {
+  font: 400 11px/16px var(--font-body);
+  color: var(--color-text-tertiary);
+}
+
 .group {
   margin: 0 20px;
   border-radius: var(--radius-card);

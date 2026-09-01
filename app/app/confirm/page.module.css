@@ -172,3 +172,31 @@
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px var(--color-primary-fixed);
 }
+
+/* 主界面新增输入行（配料 / 产品名） */
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 20px 12px;
+}
+.addInput {
+  flex: 1;
+  height: 44px;
+  box-sizing: border-box;
+  border-radius: var(--radius-default);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-container-lowest);
+  padding: 0 14px;
+  font: 500 14px/1 var(--font-body);
+  color: var(--color-text-primary);
+  min-width: 0;
+}
+.addInput::placeholder {
+  color: var(--color-text-tertiary);
+}
+.addInput:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-fixed);
+}

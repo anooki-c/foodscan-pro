@@ -318,6 +318,17 @@ export default function ResultPage() {
           分享
         </Button>
         <Button
+          variant="secondary"
+          size="lg"
+          onClick={() => {
+            useAnalysisStore.getState().setDraftIngredients(analysis.ingredients);
+            window.location.href = `/confirm?source=edit&id=${analysis.id}`;
+          }}
+        >
+          <span className="material-symbols-rounded" style={{ fontSize: 18 }}>edit_note</span>
+          编辑配料表
+        </Button>
+        <Button
           variant="primary"
           size="lg"
           style={{ flex: 1 }}

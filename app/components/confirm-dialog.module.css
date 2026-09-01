@@ -1,0 +1,121 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(26, 22, 38, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.18s var(--ease-standard);
+}
+
+.dialog {
+  width: 100%;
+  max-width: 360px;
+  padding: 24px 20px 20px;
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 24px 64px rgba(31, 27, 46, 0.28);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: popIn 0.22s var(--ease-standard);
+}
+
+.iconWrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--color-primary-fixed);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.title {
+  font: 700 16px/24px var(--font-display);
+  color: var(--color-text-primary);
+  margin: 0 0 6px;
+}
+
+.desc {
+  font: 400 13px/20px var(--font-body);
+  color: var(--color-text-secondary);
+  margin: 0 0 20px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.cancelBtn,
+.confirmBtn {
+  flex: 1;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  font: 600 14px/20px var(--font-body);
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-standard), opacity 0.15s var(--ease-standard),
+    box-shadow 0.15s var(--ease-standard);
+}
+
+.cancelBtn {
+  background: rgba(124, 91, 201, 0.08);
+  border: 1px solid var(--color-divider);
+  color: var(--color-text-secondary);
+}
+.cancelBtn:hover {
+  background: rgba(124, 91, 201, 0.14);
+}
+
+.confirmBtn {
+  background: var(--gradient-accent);
+  border: none;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(236, 72, 153, 0.3);
+}
+.confirmBtn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(236, 72, 153, 0.36);
+}
+.confirmBtn:active {
+  transform: translateY(0);
+}
+
+.confirmBtn.danger {
+  background: linear-gradient(135deg, #e5484d, #d13339);
+  box-shadow: 0 6px 16px rgba(229, 72, 77, 0.32);
+}
+.confirmBtn.danger:hover {
+  box-shadow: 0 8px 20px rgba(229, 72, 77, 0.4);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

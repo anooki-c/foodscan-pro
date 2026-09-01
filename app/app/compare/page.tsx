@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import AppBar from "@/components/AppBar";
 import Button from "@/components/Button";
 import GlassCard from "@/components/GlassCard";
+import TabBar from "@/components/TabBar";
 import { useAnalysisStore } from "@/store/analysis";
 import styles from "./page.module.css";
 
@@ -30,6 +31,7 @@ export default function ComparePage() {
           <p>在分析结果页点击&ldquo;加入对比&rdquo;（最多 5 个食品）</p>
           <Button onClick={() => (window.location.href = "/history")}>去历史记录选择</Button>
         </div>
+        <TabBar />
       </div>
     );
   }
@@ -179,6 +181,8 @@ export default function ComparePage() {
           <strong>说明：</strong>配料表顺序可用于观察配料组成差异，但不能仅凭顺序确定具体含量。统计结果不代表&ldquo;更健康&rdquo;或&ldquo;更不健康&rdquo;的评价。
         </div>
       </main>
+
+      <TabBar />
     </div>
   );
 }

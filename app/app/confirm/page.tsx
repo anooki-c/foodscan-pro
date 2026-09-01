@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, Suspense } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import AppBar from "@/components/AppBar";
 import Button from "@/components/Button";
@@ -15,13 +15,49 @@ import styles from "./page.module.css";
 function ConfirmInner() {
   const searchParams = useSearchParams();
   const source = searchParams.get("source") ?? "manual";
+  const editId = searchParams.get("id");
 
-  const { draftIngredients, updateDraftIngredient, deleteDraftIngredient, addDraftIngredient } =
-    useAnalysisStore();
+  const {
+    draftIngredients,
+    updateDraftIngredient,
+    deleteDraftIngredient,
+    addDraftIngredient,
+    setDraftIngredients,
+  } = useAnalysisStore();
 
   const [editing, setEditing] = useState<Ingredient | null>(null);
   const [manualInput, setManualInput] = useState("");
-  const [productName] = useState("即食燕麦片");
+  /** 编辑弹层内独立输入（不与主界面新增输入框互相污染） */
+  const [editInput, setEditInput] = useState("");
+  const [productName, setProductName] = useState("");
+
+  // 编辑模式：从历史记录回填已识别的配料表与产品名（刷新页面也不丢失）
+  useEffect(() => {
+    if (source !== "edit" || !editId || draftIngredients.length > 0) return;
+    const analysis = useAnalysisStore.getState().getAnalysisById(editId);
+    if (analysis) {
+      setDraftIngredients(analysis.ingredients);
+      setProductName(analysis.product.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, editId]);
+
+  /** 手动新增一条配料（输入为空时忽略） */
+  const addManual = () => {
+    const text = manualInput.trim();
+    if (!text) return;
+    addDraftIngredient({
+      id: `i-manual-${Date.now()}`,
+      originalText: text,
+      finalText: text,
+      originalPos: 0,
+      finalPos: 0,
+      source: "manual",
+      confidence: "manual",
+      isManual: true,
+    });
+    setManualInput("");
+  };
 
   const candidates = useMemo(() => {
     if (!editing) return [];
@@ -38,7 +74,13 @@ function ConfirmInner() {
   };
 
   const sourceLabel =
-    source === "barcode" ? "条形码查询" : source === "ocr" ? "图片识别" : "手动输入";
+    source === "barcode"
+      ? "条形码查询"
+      : source === "ocr"
+        ? "图片识别"
+        : source === "edit"
+          ? "历史编辑"
+          : "手动输入";
 
   return (
     <div className={styles.page}>
@@ -54,8 +96,12 @@ function ConfirmInner() {
             error
           </span>
           <div>
-            <h3>请确认识别结果</h3>
-            <p>自动识别结果不能直接作为最终分析结果，请检查以下配料。</p>
+            <h3>{source === "edit" ? "请检查并编辑配料表" : "请确认识别结果"}</h3>
+            <p>
+              {source === "edit"
+                ? "已从历史记录带入已识别的配料，可直接编辑或新增后重新分析。"
+                : "自动识别结果不能直接作为最终分析结果，请检查以下配料。"}
+            </p>
           </div>
         </div>
 
@@ -64,31 +110,35 @@ function ConfirmInner() {
           <span className={styles.sourceChip}>{draftIngredients.length} 项</span>
         </div>
 
-        <div className={styles.sectionHead}>
-          <h2>配料表</h2>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => {
-              const text = manualInput.trim();
-              if (!text) return;
-              const id = `i-manual-${Date.now()}`;
-              addDraftIngredient({
-                id,
-                originalText: text,
-                finalText: text,
-                originalPos: 0,
-                finalPos: 0,
-                source: "manual",
-                confidence: "manual",
-                isManual: true,
-              });
-              setManualInput("");
+        <div className={styles.addRow}>
+          <input
+            className={styles.addInput}
+            placeholder="产品名称（可选，留空显示「未命名食品」）"
+            value={productName}
+            onChange={(e) => setProductName(e.target.value)}
+            aria-label="产品名称"
+          />
+        </div>
+
+        <div className={styles.addRow}>
+          <input
+            className={styles.addInput}
+            placeholder="输入配料名称，如：白砂糖、水"
+            value={manualInput}
+            onChange={(e) => setManualInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") addManual();
             }}
-          >
+            aria-label="配料名称"
+          />
+          <Button variant="primary" size="sm" onClick={addManual}>
             <span className="material-symbols-rounded" style={{ fontSize: 16 }}>add</span>
             新增
           </Button>
+        </div>
+
+        <div className={styles.sectionHead}>
+          <h2>配料表</h2>
         </div>
 
         <div className={styles.ingredientList}>
@@ -107,7 +157,10 @@ function ConfirmInner() {
                 index={idx}
                 draggable
                 interactive
-                onEdit={(i) => setEditing(i)}
+                onEdit={(i) => {
+                  setEditing(i);
+                  setEditInput("");
+                }}
                 onDelete={(id) => deleteDraftIngredient(id)}
               />
             ))
@@ -132,7 +185,10 @@ function ConfirmInner() {
       {/* 编辑 BottomSheet */}
       <BottomSheet
         open={!!editing}
-        onClose={() => setEditing(null)}
+        onClose={() => {
+          setEditing(null);
+          setEditInput("");
+        }}
         title="编辑配料"
         sub={
           editing && (
@@ -154,13 +210,13 @@ function ConfirmInner() {
               onClick={() => {
                 if (editing) {
                   updateDraftIngredient(editing.id, {
-                    finalText: manualInput || editing.finalText,
+                    finalText: editInput.trim() || editing.finalText,
                     isManual: true,
                     confidence: "manual",
                     needsConfirm: false,
                   });
                   setEditing(null);
-                  setManualInput("");
+                  setEditInput("");
                 }
               }}
             >
@@ -183,6 +239,7 @@ function ConfirmInner() {
                       confidence: "manual",
                       needsConfirm: false,
                     });
+                    setEditInput("");
                   }}
                 >
                   <span className={styles.candidateName}>{c}</span>
@@ -193,7 +250,7 @@ function ConfirmInner() {
             <input
               className={styles.manualInput}
               placeholder="或直接输入名称…"
-              value={manualInput}
+              value={editInput}
               onChange={(e) => setManualInput(e.target.value)}
             />
           </>

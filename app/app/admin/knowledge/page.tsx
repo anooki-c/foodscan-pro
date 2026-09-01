@@ -11,6 +11,7 @@ import {
   type KbItem,
   type KbKind,
 } from "@/lib/services/api";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import styles from "../pages.module.css";
 
 /* ---------- 按 kind 的表单字段定义 ---------- */
@@ -156,6 +157,13 @@ export default function KnowledgePage() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [confirm, setConfirm] = useState<null | {
+    title: string;
+    desc?: string;
+    confirmText?: string;
+    danger?: boolean;
+    action: () => void;
+  }>(null);
 
   const reloadStats = useCallback(async () => {
     setStats(await fetchKbStats());
@@ -240,33 +248,45 @@ export default function KnowledgePage() {
     loadList(tab, editing.mode === "edit" ? page : 1, search);
   };
 
-  const removeItem = async (item: KbItem) => {
-    const tip = item.is_builtin
-      ? `「${item.name}」为内置条目，删除后可通过「恢复内置数据」找回。确定删除？`
-      : `确定删除「${item.name}」？`;
-    if (!window.confirm(tip)) return;
-    const res = await deleteKbItem(item.id);
-    if (!res.ok) {
-      setErr(res.error ?? "删除失败");
-      return;
-    }
-    setMsg(`已删除「${item.name}」`);
-    reloadStats();
-    loadList(tab, page, search);
+  const removeItem = (item: KbItem) => {
+    const isBuiltin = item.is_builtin;
+    setConfirm({
+      title: `删除「${item.name}」？`,
+      desc: isBuiltin
+        ? "该条目为内置数据，删除后可通过「恢复内置数据」找回。"
+        : "删除后不可恢复。",
+      confirmText: "删除",
+      danger: true,
+      action: async () => {
+        const res = await deleteKbItem(item.id);
+        if (!res.ok) {
+          setErr(res.error ?? "删除失败");
+          return;
+        }
+        setMsg(`已删除「${item.name}」`);
+        reloadStats();
+        loadList(tab, page, search);
+      },
+    });
   };
 
-  const restoreBuiltin = async () => {
-    if (!window.confirm("将用内置数据覆盖同名的内置条目（用户自定义条目不受影响），确定恢复？")) return;
-    setLoading(true);
-    const res = await reseedKnowledge();
-    setLoading(false);
-    if (!res.ok) {
-      setErr(res.error ?? "恢复失败");
-      return;
-    }
-    setMsg(`已恢复内置数据（配料 ${res.counts?.ingredient ?? 0} · 添加剂 ${res.counts?.additive ?? 0} · 过敏原 ${res.counts?.allergen ?? 0}）`);
-    reloadStats();
-    loadList(tab, 1, search);
+  const restoreBuiltin = () => {
+    setConfirm({
+      title: "恢复内置数据？",
+      desc: "将用内置数据覆盖同名的内置条目（用户自定义条目不受影响）。",
+      action: async () => {
+        setLoading(true);
+        const res = await reseedKnowledge();
+        setLoading(false);
+        if (!res.ok) {
+          setErr(res.error ?? "恢复失败");
+          return;
+        }
+        setMsg(`已恢复内置数据（配料 ${res.counts?.ingredient ?? 0} · 添加剂 ${res.counts?.additive ?? 0} · 过敏原 ${res.counts?.allergen ?? 0}）`);
+        reloadStats();
+        loadList(tab, 1, search);
+      },
+    });
   };
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -473,6 +493,20 @@ export default function KnowledgePage() {
       </div>
 
       {renderForm()}
+
+      <ConfirmDialog
+        open={!!confirm}
+        title={confirm?.title ?? ""}
+        description={confirm?.desc}
+        confirmText={confirm?.confirmText ?? "确定"}
+        danger={confirm?.danger}
+        onConfirm={() => {
+          const action = confirm?.action;
+          setConfirm(null);
+          if (action) void action();
+        }}
+        onCancel={() => setConfirm(null)}
+      />
     </div>
   );
 }

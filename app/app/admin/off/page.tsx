@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { fetchOffStats, checkOffConnection, forceOffUpdate } from "@/lib/services/api";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import styles from "../pages.module.css";
 
 function fmtTime(ts: number | null): string {
@@ -19,6 +20,7 @@ export default function OffPage() {
   const [updating, setUpdating] = useState(false);
   const [result, setResult] = useState("");
   const [err, setErr] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const reload = useCallback(async () => {
     const stats = await fetchOffStats();
@@ -47,7 +49,6 @@ export default function OffPage() {
   };
 
   const forceUpdate = async () => {
-    if (!window.confirm("将清空 OFF 本地缓存（1 小时 TTL），下次按条码查询会重新从 OFF 拉取。确定继续？")) return;
     setUpdating(true);
     setErr("");
     setResult("");
@@ -101,7 +102,7 @@ export default function OffPage() {
           <button className={styles.btnSm} onClick={checkUpdate} disabled={checking || !enabled}>
             {checking ? "检查中…" : "检查更新（连通性探测）"}
           </button>
-          <button className={styles.btnSm} onClick={forceUpdate} disabled={updating}>
+          <button className={styles.btnSm} onClick={() => setConfirmOpen(true)} disabled={updating}>
             {updating ? "更新中…" : "立即强制更新（清空缓存）"}
           </button>
         </div>
@@ -109,6 +110,19 @@ export default function OffPage() {
         {result && <p className={styles.sub}>{result}</p>}
         {err && <p className={styles.sub} style={{ color: "var(--color-status-additive-fg)" }}>{err}</p>}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="清空 OFF 本地缓存？"
+        description="下次按条码查询会重新从 OFF 拉取数据（1 小时 TTL）。"
+        confirmText="清空缓存"
+        danger
+        onConfirm={() => {
+          setConfirmOpen(false);
+          void forceUpdate();
+        }}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 }
