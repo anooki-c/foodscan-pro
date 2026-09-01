@@ -15,6 +15,8 @@ interface AdditiveDetailSheetProps {
   /** 在原配料表中的位置 */
   position: number;
   onClose: () => void;
+  /** 点击「修改配料」时的回调（由父组件负责跳转确认页并自动进入编辑态） */
+  onEditFix?: (ing: Ingredient) => void;
 }
 
 interface KbData {
@@ -39,6 +41,7 @@ export default function AdditiveDetailSheet({
   additive,
   position,
   onClose,
+  onEditFix,
 }: AdditiveDetailSheetProps) {
   const [showThird, setShowThird] = useState(false);
   const [kb, setKb] = useState<KbData | null>(null);
@@ -82,6 +85,17 @@ export default function AdditiveDetailSheet({
           <Button variant="ghost" size="md" onClick={onClose}>
             关闭
           </Button>
+          {onEditFix && (
+            <Button
+              variant="primary"
+              size="md"
+              style={{ flex: 1 }}
+              onClick={() => onEditFix(additive)}
+            >
+              <span className="material-symbols-rounded" style={{ fontSize: 16 }}>edit_note</span>
+              发现识别错误？修改配料
+            </Button>
+          )}
         </div>
       }
     >

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import AppBar from "@/components/AppBar";
-import Button from "@/components/Button";
 import TabBar from "@/components/TabBar";
 import { ALLERGEN_OPTIONS } from "@/lib/mock-data";
 import { toast } from "@/components/toast";
@@ -35,10 +34,11 @@ export default function SettingsPage() {
   }, []);
 
   // 写入内联在用户操作中：点击即落盘，不依赖 effect 时序，
-  // 彻底消除「读取覆盖写入」的竞态窗口
+  // 彻底消除「读取覆盖写入」的竞态窗口；同时即时 toast 反馈
   const toggle = (key: string) => {
+    const has = selected.includes(key);
     setSelected((s) => {
-      const next = s.includes(key) ? s.filter((x) => x !== key) : [...s, key];
+      const next = has ? s.filter((x) => x !== key) : [...s, key];
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       } catch {
@@ -46,6 +46,7 @@ export default function SettingsPage() {
       }
       return next;
     });
+    toast(has ? "已取消关注该过敏原" : "已关注该过敏原，切换即时生效");
   };
 
   return (
@@ -104,13 +105,6 @@ export default function SettingsPage() {
           <span>食品配料分析 · V1.0.0</span>
         </div>
       </main>
-
-      <div className={styles.bottomBar}>
-        <Button fullWidth onClick={() => toast("过敏原设置已保存到本机")}>
-          <span className="material-symbols-rounded" style={{ fontSize: 18 }}>check</span>
-          完成
-        </Button>
-      </div>
 
       <TabBar />
     </div>

@@ -48,6 +48,16 @@ export default function ResultPage() {
   // 分享反馈提示
   const [shareTip, setShareTip] = useState("");
 
+  // 详情弹窗「修改配料」：与「编辑配料表」逻辑一致——关闭弹窗、回填配料，
+  // 跳转确认页并携带 fix 参数，由确认页自动高亮目标配料进入编辑态
+  const goEditFix = (ing: Ingredient) => {
+    if (!analysis) return;
+    setSelectedIngredient(null);
+    setSelectedAdditive(null);
+    useAnalysisStore.getState().setDraftIngredients(analysis.ingredients);
+    window.location.href = `/confirm?source=edit&id=${analysis.id}&fix=${encodeURIComponent(ing.finalText)}`;
+  };
+
   const handleShare = async () => {
     if (!analysis) return;
     const text = `${analysis.product.name} · ${analysis.ingredients.length} 项配料\n${analysis.ingredients
@@ -349,6 +359,7 @@ export default function ResultPage() {
             : 0
         }
         onClose={() => setSelectedIngredient(null)}
+        onEditFix={goEditFix}
       />
 
       {/* 添加剂详情 BottomSheet */}
@@ -361,6 +372,7 @@ export default function ResultPage() {
             : 0
         }
         onClose={() => setSelectedAdditive(null)}
+        onEditFix={goEditFix}
       />
     </div>
   );

@@ -15,6 +15,8 @@ interface IngredientDetailSheetProps {
   /** 在配料表中的位置（从 1 开始） */
   position: number;
   onClose: () => void;
+  /** 点击「修改配料」时的回调（由父组件负责跳转确认页并自动进入编辑态） */
+  onEditFix?: (ing: Ingredient) => void;
 }
 
 interface KbData {
@@ -35,6 +37,7 @@ export default function IngredientDetailSheet({
   ingredient,
   position,
   onClose,
+  onEditFix,
 }: IngredientDetailSheetProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [kb, setKb] = useState<KbData | null>(null);
@@ -88,8 +91,14 @@ export default function IngredientDetailSheet({
             size="md"
             style={{ flex: 1 }}
             onClick={() => {
-              onClose();
-              window.location.href = `/confirm?source=manual&fix=${ingredient.finalText}`;
+              if (onEditFix) {
+                // 与「编辑配料表」逻辑一致：父组件关闭弹窗并跳转确认页自动进入编辑态
+                onEditFix(ingredient);
+              } else {
+                // 兜底：无回调时保持旧行为（父组件应传入 onEditFix）
+                onClose();
+                window.location.href = `/confirm?source=manual&fix=${encodeURIComponent(ingredient.finalText)}`;
+              }
             }}
           >
             <span className="material-symbols-rounded" style={{ fontSize: 16 }}>edit_note</span>

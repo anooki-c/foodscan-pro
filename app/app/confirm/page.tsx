@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, Suspense } from "react";
+import { useMemo, useState, useEffect, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import AppBar from "@/components/AppBar";
 import Button from "@/components/Button";
@@ -95,6 +95,25 @@ function ConfirmInner() {
     setEditText(ing.finalText);
     setEditingId(ing.id);
   };
+
+  // 从结果页「修改配料」进入：回填完成后自动高亮目标配料进入编辑态
+  const fixConsumed = useRef(false);
+  useEffect(() => {
+    if (source !== "edit" || !editId || draftIngredients.length === 0) return;
+    if (fixConsumed.current) return;
+    const fix = searchParams.get("fix");
+    if (!fix) return;
+    fixConsumed.current = true;
+    const target = draftIngredients.find(
+      (i) => i.id === fix || i.finalText === fix || i.originalText === fix
+    );
+    if (target) startEdit(target);
+    // 清除 fix 参数，避免刷新 / 返回后再次自动进入编辑态
+    const url = new URL(window.location.href);
+    url.searchParams.delete("fix");
+    window.history.replaceState({}, "", url.toString());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source, editId, draftIngredients]);
 
   /** 点击配料行其他区域（离开编辑）时，若有改动则弹确认 */
   const handleRowBlur = (ing: Ingredient) => {
