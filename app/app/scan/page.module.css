@@ -30,6 +30,22 @@
   width: 220px;
   height: 120px;
   margin: 0 auto 12px;
+  cursor: pointer;
+}
+.scanBoxLive {
+  width: min(320px, 100%);
+  height: 200px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--color-surface-container-lowest);
+}
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
 }
 .corner {
   position: absolute;
@@ -37,6 +53,7 @@
   height: 26px;
   border: 3px solid var(--color-primary);
   border-radius: 4px;
+  z-index: 2;
 }
 .tl { top: 0; left: 0; border-right: none; border-bottom: none; }
 .tr { top: 0; right: 0; border-left: none; border-bottom: none; }
@@ -51,6 +68,7 @@
   background: linear-gradient(90deg, transparent, var(--color-primary), transparent);
   border-radius: 2px;
   animation: scan 2.2s ease-in-out infinite;
+  z-index: 2;
 }
 @keyframes scan {
   0%, 100% { top: 14%; opacity: 0.6; }
@@ -60,6 +78,20 @@
   font: 400 12px/18px var(--font-body);
   color: var(--color-text-secondary);
   margin: 0;
+}
+.stopCam {
+  margin-top: 10px;
+  border: none;
+  background: var(--color-surface-container-low);
+  color: var(--color-text-secondary);
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font: 500 12px/16px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
+}
+.stopCam:hover {
+  color: var(--color-text-primary);
 }
 
 .label {

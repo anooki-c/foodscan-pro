@@ -26,6 +26,35 @@ export default function ResultPage() {
   // AI 解读状态（真实 API + mock 兜底）
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  // 分享反馈提示
+  const [shareTip, setShareTip] = useState("");
+
+  const handleShare = async () => {
+    if (!analysis) return;
+    const text = `${analysis.product.name} · ${analysis.ingredients.length} 项配料\n${analysis.ingredients
+      .map((i) => i.finalText)
+      .join("、")}`;
+    const url = window.location.href;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ title: analysis.product.name, text, url });
+        return;
+      } catch (e) {
+        // 用户取消分享不视为错误
+        if ((e as Error)?.name === "AbortError") return;
+      }
+    }
+
+    // 兜底：复制到剪贴板
+    try {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      setShareTip("配料信息已复制到剪贴板");
+    } catch {
+      setShareTip("分享失败，请手动复制链接");
+    }
+    setTimeout(() => setShareTip(""), 2500);
+  };
 
   const loadAi = useCallback(async () => {
     if (!analysis) return;
@@ -218,8 +247,10 @@ export default function ResultPage() {
         </div>
       </main>
 
+      {shareTip && <div className={styles.shareTip}>{shareTip}</div>}
+
       <div className={styles.actionBar}>
-        <Button variant="secondary" size="lg">
+        <Button variant="secondary" size="lg" onClick={() => void handleShare()}>
           <span className="material-symbols-rounded" style={{ fontSize: 18 }}>share</span>
           分享
         </Button>

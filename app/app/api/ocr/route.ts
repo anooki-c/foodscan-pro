@@ -7,8 +7,8 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/ocr
  * body: { image: base64, mime?: "jpeg"|"png"|"webp" }
- * 优先级（PRD §7.3）：第三方 OCR → 本地拆分兜底
- * 真实场景：图片上传后可做方向校正/压缩后传给第三方。
+ * 优先级：第三方 OCR → 明确报错（不再用写死的模拟文本冒充识别结果）
+ * 未配置第三方 OCR 时返回 503 + code=OCR_NOT_CONFIGURED，由前端引导用户配置或走手动输入。
  */
 export async function POST(req: Request) {
   const cfg = getServerConfig();
@@ -24,28 +24,35 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "缺少图片" }, { status: 400 });
   }
 
-  const usedProvider: string[] = [];
-
-  // 1. 第三方 OCR（未启用/无 key 时返回 null）
+  // 第三方 OCR（未启用/无 key/调用失败时返回 null）
   const third = await callThirdPartyOcr(image);
   if (third && third.text) {
-    usedProvider.push(cfg.ocr.provider);
     const ingredients = await splitIngredientText(third.text);
+    // OCR 识别结果需要人工核对
+    ingredients.forEach((i) => {
+      i.needsConfirm = true;
+      i.confidence = third.confidence >= 70 ? "medium" : "low";
+    });
     return NextResponse.json({
+      ok: true,
       provider: cfg.ocr.provider,
       confidence: third.confidence,
-      usedProviders: usedProvider,
+      usedProviders: [cfg.ocr.provider],
       ingredients,
     });
   }
 
-  // 2. 兜底：未配置第三方 → 本地模拟识别（示意）
-  usedProvider.push("local-fallback");
-  const ingredients = await splitIngredientText("小麦粉、白砂糖、食用植物油、乳粉、山梨酸钾");
-  return NextResponse.json({
-    provider: "local-fallback",
-    confidence: 75,
-    usedProviders: usedProvider,
-    ingredients,
-  });
+  // 未配置/识别失败 → 明确提示，绝不返回伪造结果
+  const configured = cfg.ocr.enabled && cfg.ocr.apiUrl && cfg.ocr.apiKey;
+  return NextResponse.json(
+    {
+      ok: false,
+      error: configured
+        ? "第三方 OCR 识别失败，请检查服务地址与密钥，或换一张更清晰的图片"
+        : "未配置 OCR 服务",
+      code: configured ? "OCR_CALL_FAILED" : "OCR_NOT_CONFIGURED",
+      hint: "请到后台 /admin/ocr 配置，或在前端改用手动输入配料",
+    },
+    { status: 503 }
+  );
 }

@@ -21,18 +21,29 @@ export async function fetchProductByBarcode(barcode: string): Promise<BarcodeRes
   }
 }
 
-/** OCR 识别图片（第三方优先，本地兜底） */
-export async function fetchOcr(image: string, mime = "jpeg") {
+/** OCR 识别图片（第三方优先；未配置/失败时返回明确错误信息） */
+export interface OcrResult {
+  ok: boolean;
+  error?: string;
+  code?: string;
+  provider?: string;
+  confidence?: number;
+  ingredients?: Ingredient[];
+}
+export async function fetchOcr(image: string, mime = "jpeg"): Promise<OcrResult> {
   try {
     const res = await fetch("/api/ocr", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ image, mime }),
     });
-    if (!res.ok) return null;
-    return await res.json();
+    const data = await res.json();
+    if (!res.ok) {
+      return { ok: false, error: data.error ?? "识别失败", code: data.code };
+    }
+    return { ok: true, ...data };
   } catch {
-    return null;
+    return { ok: false, error: "网络错误，请稍后重试" };
   }
 }
 

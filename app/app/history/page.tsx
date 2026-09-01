@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import AppBar from "@/components/AppBar";
 import Button from "@/components/Button";
@@ -14,10 +15,31 @@ const THUMB_GRADIENTS: Record<string, string> = {
   "p-energy": "linear-gradient(135deg, #F48FB1 0%, #EC407A 100%)",
 };
 
+type HistoryFilter = "all" | "additive" | "allergen";
+
+const FILTERS: { key: HistoryFilter; label: string }[] = [
+  { key: "all", label: "全部" },
+  { key: "additive", label: "含添加剂" },
+  { key: "allergen", label: "含过敏原" },
+];
+
 export default function HistoryPage() {
   const history = useAnalysisStore((s) => s.history);
   const removeHistory = useAnalysisStore((s) => s.removeHistory);
   const toggleCompare = useAnalysisStore((s) => s.toggleCompare);
+
+  const [keyword, setKeyword] = useState("");
+  const [filter, setFilter] = useState<HistoryFilter>("all");
+
+  const filtered = useMemo(() => {
+    const kw = keyword.trim().toLowerCase();
+    return history.filter((h) => {
+      if (filter === "additive" && !h.ingredients.some((i) => i.category === "additive")) return false;
+      if (filter === "allergen" && !h.ingredients.some((i) => (i.allergens?.length ?? 0) > 0)) return false;
+      if (kw && !h.product.name.toLowerCase().includes(kw)) return false;
+      return true;
+    });
+  }, [history, keyword, filter]);
 
   return (
     <div className={styles.page}>
@@ -28,27 +50,41 @@ export default function HistoryPage() {
           <span className="material-symbols-rounded" style={{ fontSize: 20, color: "var(--color-text-tertiary)" }}>
             search
           </span>
-          <input placeholder="搜索食品名称…" />
+          <input
+            placeholder="搜索食品名称…"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+          />
           <span className="material-symbols-rounded" style={{ fontSize: 18, color: "var(--color-text-tertiary)" }}>
             tune
           </span>
         </div>
 
         <div className={styles.filterRow}>
-          <button className={`${styles.filterChip} ${styles.active}`}>全部</button>
-          <button className={styles.filterChip}>含添加剂</button>
-          <button className={styles.filterChip}>含过敏原</button>
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              className={`${styles.filterChip} ${filter === f.key ? styles.active : ""}`}
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
 
-        {history.length === 0 ? (
+        {filtered.length === 0 ? (
           <div className={styles.empty}>
-            <h2>还没有分析记录</h2>
-            <p>试试从首页开始第一次分析</p>
+            <h2>{history.length === 0 ? "还没有分析记录" : "没有匹配的记录"}</h2>
+            <p>
+              {history.length === 0
+                ? "试试从首页开始第一次分析"
+                : "换个关键词或筛选条件试试"}
+            </p>
             <Button onClick={() => (window.location.href = "/")}>去首页</Button>
           </div>
         ) : (
           <div className={styles.historyList}>
-            {history.map((h) => (
+            {filtered.map((h) => (
               <GlassCard key={h.id} className={styles.historyCard}>
                 <Link href={`/result/${h.id}`} className={styles.historyMain}>
                   <div

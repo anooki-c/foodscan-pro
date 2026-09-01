@@ -1,0 +1,158 @@
+.page {
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 40px;
+}
+
+.scroll {
+  padding: 8px 0;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.card {
+  margin: 8px 20px;
+  padding: 24px 20px;
+  border-radius: var(--radius-card);
+  background: rgba(255, 255, 255, 0.3);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.heroIcon {
+  width: 72px;
+  height: 72px;
+  margin: 8px auto 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-fixed);
+  color: var(--color-primary);
+}
+.heroIcon span {
+  font-size: 34px;
+}
+
+.title {
+  text-align: center;
+  font: 700 20px/28px var(--font-body);
+  color: var(--color-text-primary);
+  margin: 0 0 8px;
+}
+.subtitle {
+  text-align: center;
+  font: 400 13px/20px var(--font-body);
+  color: var(--color-text-secondary);
+  margin: 0 0 24px;
+}
+
+.pickButtons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.pickBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 12px;
+  border-radius: var(--radius-default);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-container-lowest);
+  color: var(--color-text-primary);
+  font: 600 14px/20px var(--font-body);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.pickBtn span {
+  font-size: 28px;
+  color: var(--color-primary);
+}
+.pickBtn:hover {
+  border-color: var(--color-primary);
+}
+.pickBtn:active {
+  transform: scale(0.97);
+}
+
+.dropZone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 18px;
+  border: 1.5px dashed var(--color-divider);
+  border-radius: var(--radius-default);
+  color: var(--color-text-tertiary);
+  font: 400 13px/18px var(--font-body);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.dropZone span {
+  font-size: 20px;
+}
+.dropActive {
+  border-color: var(--color-primary);
+  background: var(--color-primary-fixed);
+  color: var(--color-primary);
+}
+
+.previewWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.preview {
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+  border-radius: var(--radius-default);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-container-lowest);
+}
+.previewActions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.errorBox {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-default);
+  background: var(--color-status-additive-bg);
+  color: var(--color-status-additive-fg);
+}
+.errorBox > span {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.errorBox p {
+  margin: 0 0 6px;
+  font: 400 13px/20px var(--font-body);
+}
+.linkBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: 600 13px/18px var(--font-body);
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.note {
+  margin-top: 20px;
+  font: 400 11px/16px var(--font-body);
+  color: var(--color-text-tertiary);
+  padding: 8px 10px;
+  border-radius: var(--radius-default);
+  background: var(--color-surface-container-low);
+}

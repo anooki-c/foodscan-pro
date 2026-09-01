@@ -1,12 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import AppBar from "@/components/AppBar";
 import TabBar from "@/components/TabBar";
 import Chip from "@/components/Chip";
 import GlassCard from "@/components/GlassCard";
 import { useAnalysisStore } from "@/store/analysis";
-import { mockAnalysis } from "@/lib/mock-data";
 import styles from "./page.module.css";
 
 const ENTRIES = [
@@ -22,14 +22,14 @@ const ENTRIES = [
     icon: "photo_camera",
     title: "拍摄配料表",
     desc: "拍照自动识别",
-    href: "/confirm?source=ocr",
+    href: "/scan/photo",
   },
   {
     key: "upload",
     icon: "upload_file",
     title: "上传图片",
     desc: "JPG / PNG / WEBP",
-    href: "/confirm?source=ocr",
+    href: "/scan/photo",
   },
   {
     key: "text",
@@ -45,14 +45,23 @@ const THUMB_GRADIENTS: Record<string, string> = {
   "p-energy": "linear-gradient(135deg, #F48FB1 0%, #EC407A 100%)",
 };
 
+const ENTRY_TABS = [
+  { key: "all", label: "全部入口" },
+  { key: "camera", label: "📷 拍照" },
+  { key: "text", label: "⌨️ 文字" },
+  { key: "scan", label: "🔍 条码" },
+  { key: "upload", label: "📁 上传" },
+];
+
 export default function HomePage() {
   const history = useAnalysisStore((s) => s.history);
+  const [entryTab, setEntryTab] = useState<string>("all");
+
+  const visibleEntries =
+    entryTab === "all" ? ENTRIES : ENTRIES.filter((e) => e.key === entryTab);
 
   const handleEntry = (href: string) => {
-    // 非条码入口：预填 mock 配料进入确认页（真实场景走 OCR/手动）
-    useAnalysisStore
-      .getState()
-      .setDraftIngredients(mockAnalysis.oatMilk.ingredients.map((i) => ({ ...i })));
+    // 各入口自行准备草稿（扫描/拍摄/手动），此处仅跳转
     window.location.href = href;
   };
 
@@ -78,18 +87,22 @@ export default function HomePage() {
           <p>成分类型、添加剂用途、潜在过敏原。帮助理解配料信息，不评判好坏。</p>
         </section>
 
-        {/* 入口筛选（占位，后续接入真正筛选） */}
+        {/* 入口筛选 */}
         <div className={styles.filterTabs}>
-          <button className={`${styles.filterTab} ${styles.active}`}>全部入口</button>
-          <button className={styles.filterTab}>📷 拍照</button>
-          <button className={styles.filterTab}>⌨️ 文字</button>
-          <button className={styles.filterTab}>🔍 条码</button>
-          <button className={styles.filterTab}>📁 上传</button>
+          {ENTRY_TABS.map((t) => (
+            <button
+              key={t.key}
+              className={`${styles.filterTab} ${entryTab === t.key ? styles.active : ""}`}
+              onClick={() => setEntryTab(t.key)}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
 
         {/* 入口卡 2×2 */}
         <div className={styles.entries}>
-          {ENTRIES.map((e) => (
+          {visibleEntries.map((e) => (
             <button key={e.key} className={styles.entryCard} onClick={() => handleEntry(e.href)}>
               <span className={styles.entryIcon}>
                 <span className="material-symbols-rounded">{e.icon}</span>
@@ -168,7 +181,7 @@ export default function HomePage() {
         </div>
       </main>
 
-      <button className={styles.fab} onClick={() => (window.location.href = "/confirm?source=ocr")} aria-label="快速扫描">
+      <button className={styles.fab} onClick={() => (window.location.href = "/scan")} aria-label="扫描条码">
         <span className="material-symbols-rounded" style={{ fontSize: 26 }}>
           qr_code_scanner
         </span>

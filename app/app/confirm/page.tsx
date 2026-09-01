@@ -8,7 +8,7 @@ import Chip from "@/components/Chip";
 import BottomSheet from "@/components/BottomSheet";
 import IngredientRow from "@/components/IngredientRow";
 import { useAnalysisStore, confirmDraft } from "@/store/analysis";
-import { CANDIDATES, mockAnalysis } from "@/lib/mock-data";
+import { CANDIDATES } from "@/lib/mock-data";
 import type { Ingredient } from "@/lib/types";
 import styles from "./page.module.css";
 
@@ -22,17 +22,6 @@ function ConfirmInner() {
   const [editing, setEditing] = useState<Ingredient | null>(null);
   const [manualInput, setManualInput] = useState("");
   const [productName] = useState("即食燕麦片");
-
-  // 根据源预填：演示中 text 入口使用 mock
-  const [initialized] = useState(() => {
-    if (draftIngredients.length === 0) {
-      useAnalysisStore
-        .getState()
-        .setDraftIngredients(mockAnalysis.oatMilk.ingredients.map((i) => ({ ...i })));
-    }
-    return true;
-  });
-  void initialized;
 
   const candidates = useMemo(() => {
     if (!editing) return [];
@@ -81,11 +70,13 @@ function ConfirmInner() {
             variant="primary"
             size="sm"
             onClick={() => {
+              const text = manualInput.trim();
+              if (!text) return;
               const id = `i-manual-${Date.now()}`;
               addDraftIngredient({
                 id,
-                originalText: manualInput,
-                finalText: manualInput,
+                originalText: text,
+                finalText: text,
                 originalPos: 0,
                 finalPos: 0,
                 source: "manual",
@@ -101,17 +92,26 @@ function ConfirmInner() {
         </div>
 
         <div className={styles.ingredientList}>
-          {draftIngredients.map((ing, idx) => (
-            <IngredientRow
-              key={ing.id}
-              ingredient={ing}
-              index={idx}
-              draggable
-              interactive
-              onEdit={(i) => setEditing(i)}
-              onDelete={(id) => deleteDraftIngredient(id)}
-            />
-          ))}
+          {draftIngredients.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span className="material-symbols-rounded">format_list_bulleted</span>
+              <p>
+                暂无配料。请在下方输入名称后点击「新增」，或返回重新拍摄 / 条码查询。
+              </p>
+            </div>
+          ) : (
+            draftIngredients.map((ing, idx) => (
+              <IngredientRow
+                key={ing.id}
+                ingredient={ing}
+                index={idx}
+                draggable
+                interactive
+                onEdit={(i) => setEditing(i)}
+                onDelete={(id) => deleteDraftIngredient(id)}
+              />
+            ))
+          )}
         </div>
 
         {manualInput && (

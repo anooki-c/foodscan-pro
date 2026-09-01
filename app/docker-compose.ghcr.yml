@@ -11,8 +11,8 @@
 
 services:
   foodscan:
-    # 镜像名：占位符会在首次使用时替换为你的 GitHub 用户名
-    image: ghcr.io/your-github-username/foodscan-pro:latest
+    # 镜像名：GHCR 公开镜像（GitHub Actions 自动构建）
+    image: ghcr.io/anooki-c/foodscan-pro:latest
     container_name: foodscan-pro
     restart: unless-stopped
     ports:

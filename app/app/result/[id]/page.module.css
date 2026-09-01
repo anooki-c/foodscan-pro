@@ -247,6 +247,25 @@
   padding-top: 10px !important;
 }
 
+/* 分享反馈 toast */
+.shareTip {
+  position: fixed;
+  left: 50%;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0));
+  transform: translateX(-50%);
+  max-width: calc(100vw - 40px);
+  padding: 10px 16px;
+  border-radius: var(--radius-pill);
+  background: rgba(30, 30, 40, 0.92);
+  color: #fff;
+  font: 500 13px/18px var(--font-body);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  z-index: var(--z-sticky);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* 底部操作 */
 .actionBar {
   position: fixed;
