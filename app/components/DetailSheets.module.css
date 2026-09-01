@@ -96,3 +96,116 @@
   border-radius: var(--radius-default);
   background: var(--color-surface-container-low);
 }
+
+/* ---- 动态资料加载（需求 6：搜索外部/AI 资料 → 一键加入知识库） ---- */
+.suggestBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-container-lowest);
+  color: var(--color-primary);
+  font: 600 12px/16px var(--font-body);
+  cursor: pointer;
+}
+.suggestBtn:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-fixed);
+}
+.suggestLoading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font: 400 12px/16px var(--font-body);
+  color: var(--color-text-secondary);
+}
+.suggestLoading span {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.suggestCard {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-default);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-container-lowest);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.suggestHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font: 700 12px/16px var(--font-body);
+  color: var(--color-text-primary);
+}
+.sourceTag {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  font: 500 10px/14px var(--font-mono);
+  letter-spacing: var(--tracking-wide);
+}
+.sourceWiki {
+  background: var(--color-primary-fixed);
+  color: var(--color-primary);
+}
+.sourceAi {
+  background: var(--color-status-additive-bg);
+  color: var(--color-status-additive-fg);
+}
+.suggestLine {
+  margin: 0;
+  font: 400 12px/18px var(--font-body);
+  color: var(--color-text-primary);
+  word-break: break-all;
+}
+.suggestLine b {
+  font-weight: 600;
+}
+.suggestActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 2px;
+}
+.suggestVia {
+  font: 400 10px/14px var(--font-body);
+  color: var(--color-text-tertiary);
+  flex: 1;
+}
+.suggestSaveBtn {
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: var(--gradient-accent);
+  color: white;
+  font: 600 12px/16px var(--font-body);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.suggestSaveBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.suggestMsg {
+  margin: 0;
+  font: 500 11px/16px var(--font-body);
+  color: var(--color-status-natural-fg);
+}
+.suggestError {
+  margin-top: 12px;
+  font: 400 12px/18px var(--font-body);
+  color: var(--color-status-additive-fg);
+  padding: 8px 10px;
+  border-radius: var(--radius-default);
+  background: var(--color-status-additive-bg);
+}

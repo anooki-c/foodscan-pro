@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchAdminConfig, saveAdminConfig } from "@/lib/services/api";
+import { fetchAdminConfig, saveAdminConfig, testConnection } from "@/lib/services/api";
 import styles from "../pages.module.css";
 
 interface OcrForm {
@@ -17,13 +17,20 @@ interface OcrForm {
 /** 预置服务商模板 */
 const OCR_PRESETS: Record<
   string,
-  { label: string; apiUrl: string; needSecret: boolean; tip?: string }
+  { label: string; apiUrl: string; needSecret: boolean; keyOptional?: boolean; tip?: string }
 > = {
   baidu: {
     label: "百度云 OCR",
     apiUrl: "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic",
     needSecret: true,
     tip: "AK（API Key）与 SK（Secret Key）在百度智能云控制台「安全认证」中创建，通用文字识别（标准版）每月 1000 次免费额度。",
+  },
+  selfhosted: {
+    label: "本地/自建部署",
+    apiUrl: "",
+    needSecret: false,
+    keyOptional: true,
+    tip: "本地或自建部署的 OCR 服务（如 PaddleOCR、Tesseract 自建网关）。协议：POST 请求，请求体 { image: base64 }，返回 { text, confidence }；API Key 可留空（不携带鉴权头）。",
   },
   custom: {
     label: "自定义",
@@ -48,6 +55,10 @@ export default function OcrPage() {
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [showKey, setShowKey] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testMsg, setTestMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -115,6 +126,28 @@ export default function OcrPage() {
     }
   };
 
+  /** 连通性测试：用当前表单配置探测（不保存） */
+  const handleTest = async () => {
+    setTesting(true);
+    setTestMsg(null);
+    const res = await testConnection("ocr", {
+      provider: form.provider,
+      apiUrl: form.apiUrl,
+      apiKey: form.apiKey, // 脱敏值时后端回退已保存真实 key
+      apiSecret: form.apiSecret,
+      timeoutMs: Number(form.timeoutMs),
+    });
+    setTesting(false);
+    if (res.ok) {
+      setTestMsg({
+        ok: true,
+        text: `连接成功（${res.latencyMs ?? "-"}ms）${res.detail ? `：${res.detail}` : ""}`,
+      });
+    } else {
+      setTestMsg({ ok: false, text: `连接失败：${res.error ?? "未知错误"}` });
+    }
+  };
+
   const preset = OCR_PRESETS[form.provider] ?? OCR_PRESETS.custom;
 
   return (
@@ -149,6 +182,7 @@ export default function OcrPage() {
               disabled={!loaded}
             >
               <option value="baidu">百度云 OCR</option>
+              <option value="selfhosted">本地/自建部署</option>
               <option value="custom">自定义</option>
             </select>
           </div>
@@ -160,29 +194,51 @@ export default function OcrPage() {
               placeholder={
                 form.provider === "baidu"
                   ? "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic"
-                  : "https://your-ocr-provider.example.com/v1/recognize"
+                  : "http://127.0.0.1:8000/ocr 或 https://your-ocr.example.com/v1/recognize"
               }
               disabled={form.provider === "baidu"}
             />
           </div>
           <div className={styles.field}>
-            <label>API Key（AK）{form.apiKey && form.apiKey.includes("•") ? "（已配置，输入新值可更换）" : ""}</label>
-            <input
-              value={form.apiKey}
-              onChange={(e) => set("apiKey", e.target.value)}
-              placeholder={form.provider === "baidu" ? "百度云 API Key（AK）" : "输入 API Key"}
-              type="password"
-            />
+            <label>API Key{form.provider === "selfhosted" ? "（自建服务可留空）" : "（AK）"}{form.apiKey && form.apiKey.includes("•") ? "（已配置，输入新值可更换）" : ""}</label>
+            <div className={styles.pwdWrap}>
+              <input
+                value={form.apiKey}
+                onChange={(e) => set("apiKey", e.target.value)}
+                placeholder={form.provider === "baidu" ? "百度云 API Key（AK）" : form.provider === "selfhosted" ? "可选，留空则不携带鉴权" : "输入 API Key"}
+                type={showKey ? "text" : "password"}
+              />
+              <button
+                type="button"
+                className={styles.pwdToggle}
+                onClick={() => setShowKey((v) => !v)}
+                title={showKey ? "隐藏密钥" : "显示密钥"}
+                aria-label={showKey ? "隐藏密钥" : "显示密钥"}
+              >
+                <span className="material-symbols-rounded">{showKey ? "visibility_off" : "visibility"}</span>
+              </button>
+            </div>
           </div>
           {preset.needSecret && (
             <div className={styles.field}>
               <label>Secret Key（SK）{form.apiSecret && form.apiSecret.includes("•") ? "（已配置，输入新值可更换）" : ""}</label>
-              <input
-                value={form.apiSecret}
-                onChange={(e) => set("apiSecret", e.target.value)}
-                placeholder="百度云 Secret Key（SK）"
-                type="password"
-              />
+              <div className={styles.pwdWrap}>
+                <input
+                  value={form.apiSecret}
+                  onChange={(e) => set("apiSecret", e.target.value)}
+                  placeholder="百度云 Secret Key（SK）"
+                  type={showSecret ? "text" : "password"}
+                />
+                <button
+                  type="button"
+                  className={styles.pwdToggle}
+                  onClick={() => setShowSecret((v) => !v)}
+                  title={showSecret ? "隐藏密钥" : "显示密钥"}
+                  aria-label={showSecret ? "隐藏密钥" : "显示密钥"}
+                >
+                  <span className="material-symbols-rounded">{showSecret ? "visibility_off" : "visibility"}</span>
+                </button>
+              </div>
             </div>
           )}
           <div className={styles.field}>
@@ -205,11 +261,27 @@ export default function OcrPage() {
 
         <p className={styles.sub}>{preset.tip}</p>
 
+        {testMsg && (
+          <div className={`${styles.testResult} ${testMsg.ok ? styles.testOk : styles.testErr}`}>
+            <span className={`material-symbols-rounded ${styles.icon}`}>
+              {testMsg.ok ? "check_circle" : "error"}
+            </span>
+            <span>{testMsg.text}</span>
+          </div>
+        )}
+
         {msg && <p className={`${styles.formMsg} ${msg.startsWith("保存失败") ? styles.formErr : ""}`}>{msg}</p>}
 
         <div className={styles.statusRow}>
           <button className={styles.btnPrimary} onClick={handleSave} disabled={saving || !loaded}>
             {saving ? "保存中…" : "保存配置"}
+          </button>
+          <button
+            className={styles.btnSm}
+            onClick={handleTest}
+            disabled={testing || !loaded}
+          >
+            {testing ? "测试中…" : "测试连接"}
           </button>
           <button
             className={styles.btnSm}

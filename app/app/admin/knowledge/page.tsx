@@ -39,6 +39,8 @@ const FIELDS: Record<KbKind, FieldDef[]> = {
     { key: "processingNature", label: "加工性质", type: "text", placeholder: "如：基础原料" },
     { key: "detail", label: "详细说明", type: "textarea", wide: true },
     { key: "allergens", label: "潜在过敏原（逗号分隔）", type: "text", placeholder: "如：麸质、乳" },
+    { key: "caution", label: "注意事项", type: "textarea", wide: true, placeholder: "如：含麸质蛋白，麸质敏感人群需避免" },
+    { key: "audience", label: "不适宜人群", type: "text", placeholder: "如：麸质过敏、乳糜泻人群不适宜" },
     { key: "source", label: "数据来源", type: "text", placeholder: "如：GB/T 1355 / OFF" },
   ],
   additive: [
@@ -66,7 +68,7 @@ const FIELDS: Record<KbKind, FieldDef[]> = {
 };
 
 const EXTRA_FIELDS: Record<KbKind, string[]> = {
-  ingredient: ["processingNature", "detail", "allergens"],
+  ingredient: ["processingNature", "detail", "allergens", "caution", "audience"],
   additive: ["commonUses", "whyAdded", "safetyNote", "caution", "audience", "usageScope"],
   allergen: [],
 };
@@ -99,6 +101,8 @@ function itemToForm(item: KbItem, kind: KbKind): Record<string, string> {
     form.allergens = Array.isArray(item.extra?.allergens)
       ? (item.extra.allergens as string[]).join("、")
       : "";
+    form.caution = String(item.extra?.caution ?? "");
+    form.audience = String(item.extra?.audience ?? "");
   } else if (kind === "additive") {
     form.insE = item.ins_e;
     form.type = item.category;
@@ -135,6 +139,8 @@ function formToPayload(kind: KbKind, form: Record<string, string>) {
     extra.processingNature = form.processingNature ?? "";
     extra.detail = form.detail ?? "";
     extra.allergens = splitList(form.allergens ?? "");
+    extra.caution = form.caution ?? "";
+    extra.audience = form.audience ?? "";
   } else if (kind === "additive") {
     EXTRA_FIELDS.additive.forEach((k) => (extra[k] = form[k] ?? ""));
   }

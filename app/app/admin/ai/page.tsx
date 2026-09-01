@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchAdminConfig, saveAdminConfig } from "@/lib/services/api";
+import { fetchAdminConfig, saveAdminConfig, testConnection } from "@/lib/services/api";
 import styles from "../pages.module.css";
 
 interface AiForm {
@@ -83,6 +83,9 @@ export default function AiPage() {
   const [loaded, setLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState("");
+  const [showKey, setShowKey] = useState(false);
+  const [testing, setTesting] = useState(false);
+  const [testMsg, setTestMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -140,6 +143,27 @@ export default function AiPage() {
       if (cfg) setForm((f) => ({ ...f, apiKey: cfg.ai.apiKey }));
     } else {
       setMsg(`保存失败：${res.error ?? "未知错误"}`);
+    }
+  };
+
+  /** 连通性测试：用当前表单配置探测（不保存） */
+  const handleTest = async () => {
+    setTesting(true);
+    setTestMsg(null);
+    const res = await testConnection("ai", {
+      apiUrl: form.apiUrl,
+      apiKey: form.apiKey, // 脱敏值时后端回退已保存真实 key
+      model: form.model,
+      timeoutMs: Number(form.timeoutMs),
+    });
+    setTesting(false);
+    if (res.ok) {
+      setTestMsg({
+        ok: true,
+        text: `连接成功（${res.latencyMs ?? "-"}ms）${res.detail ? `：${res.detail}` : ""}`,
+      });
+    } else {
+      setTestMsg({ ok: false, text: `连接失败：${res.error ?? "未知错误"}` });
     }
   };
 
@@ -216,12 +240,23 @@ export default function AiPage() {
           </div>
           <div className={styles.field}>
             <label>API Key {form.apiKey && form.apiKey.includes("•") ? "（已配置，输入新值可更换）" : ""}</label>
-            <input
-              value={form.apiKey}
-              onChange={(e) => set("apiKey", e.target.value)}
-              placeholder="输入 API Key"
-              type="password"
-            />
+            <div className={styles.pwdWrap}>
+              <input
+                value={form.apiKey}
+                onChange={(e) => set("apiKey", e.target.value)}
+                placeholder="输入 API Key"
+                type={showKey ? "text" : "password"}
+              />
+              <button
+                type="button"
+                className={styles.pwdToggle}
+                onClick={() => setShowKey((v) => !v)}
+                title={showKey ? "隐藏密钥" : "显示密钥"}
+                aria-label={showKey ? "隐藏密钥" : "显示密钥"}
+              >
+                <span className="material-symbols-rounded">{showKey ? "visibility_off" : "visibility"}</span>
+              </button>
+            </div>
           </div>
           <div className={styles.field}>
             <label>超时时间（ms）</label>
@@ -235,11 +270,27 @@ export default function AiPage() {
 
         <p className={styles.sub}>{preset.tip}</p>
 
+        {testMsg && (
+          <div className={`${styles.testResult} ${testMsg.ok ? styles.testOk : styles.testErr}`}>
+            <span className={`material-symbols-rounded ${styles.icon}`}>
+              {testMsg.ok ? "check_circle" : "error"}
+            </span>
+            <span>{testMsg.text}</span>
+          </div>
+        )}
+
         {msg && <p className={`${styles.formMsg} ${msg.startsWith("保存失败") ? styles.formErr : ""}`}>{msg}</p>}
 
         <div className={styles.statusRow}>
           <button className={styles.btnPrimary} onClick={handleSave} disabled={saving || !loaded}>
             {saving ? "保存中…" : "保存配置"}
+          </button>
+          <button
+            className={styles.btnSm}
+            onClick={handleTest}
+            disabled={testing || !loaded}
+          >
+            {testing ? "测试中…" : "测试连接"}
           </button>
           <button
             className={styles.btnSm}

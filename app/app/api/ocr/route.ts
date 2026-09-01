@@ -26,6 +26,22 @@ export async function POST(req: Request) {
 
   // 第三方 OCR（未启用/无 key/调用失败时返回 null）
   const third = await callThirdPartyOcr(image);
+
+  // 调用成功但未识别到任何文字 → 明确提示（区别于接口调用失败）
+  if (third && !third.text.trim()) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          "图片已上传成功，但未识别到文字。请确认拍摄的是清晰的配料表文字区域，或尝试圈选后重新识别。",
+        code: "OCR_EMPTY_RESULT",
+        provider: cfg.ocr.provider,
+        hint: "可尝试重新拍摄更清晰的图片，或在预览中圈选配料表区域",
+      },
+      { status: 422 }
+    );
+  }
+
   if (third && third.text) {
     const ingredients = await splitIngredientText(third.text);
     // OCR 识别结果需要人工核对
@@ -43,12 +59,17 @@ export async function POST(req: Request) {
   }
 
   // 未配置/识别失败 → 明确提示，绝不返回伪造结果
-  const configured = cfg.ocr.enabled && cfg.ocr.apiUrl && cfg.ocr.apiKey;
+  // 百度云需 AK+SK；自建/自定义服务仅需 apiUrl（apiKey 可为空）
+  const baiduConfigured =
+    cfg.ocr.provider === "baidu" && cfg.ocr.apiKey && cfg.ocr.apiSecret;
+  const genericConfigured =
+    cfg.ocr.provider !== "baidu" && !!cfg.ocr.apiUrl;
+  const configured = cfg.ocr.enabled && (baiduConfigured || genericConfigured);
   return NextResponse.json(
     {
       ok: false,
       error: configured
-        ? "第三方 OCR 识别失败，请检查服务地址与密钥，或换一张更清晰的图片"
+        ? "第三方 OCR 调用失败，请检查服务地址与密钥是否有效，或服务是否在线。"
         : "未配置 OCR 服务",
       code: configured ? "OCR_CALL_FAILED" : "OCR_NOT_CONFIGURED",
       hint: "请到后台 /admin/ocr 配置，或在前端改用手动输入配料",

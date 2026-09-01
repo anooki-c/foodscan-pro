@@ -5,7 +5,7 @@ import BottomSheet from "./BottomSheet";
 import Button from "./Button";
 import Chip from "./Chip";
 import { getIngredientKnowledge } from "@/lib/knowledge";
-import { fetchKnowledge } from "@/lib/services/api";
+import { fetchKnowledge, fetchKnowledgeSuggest, upsertKbItem } from "@/lib/services/api";
 import type { Ingredient, IngredientCategory } from "@/lib/types";
 import styles from "./DetailSheets.module.css";
 
@@ -27,6 +27,8 @@ interface KbData {
   purpose: string;
   detail?: string;
   allergens?: string[];
+  caution?: string;
+  audience?: string;
   source: string;
   updatedAt: string;
 }
@@ -41,10 +43,17 @@ export default function IngredientDetailSheet({
 }: IngredientDetailSheetProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [kb, setKb] = useState<KbData | null>(null);
+  // 动态加载（需求 6）：suggest 建议 + 入库状态
+  const [suggest, setSuggest] = useState<Awaited<ReturnType<typeof fetchKnowledgeSuggest>> | null>(null);
+  const [suggesting, setSuggesting] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState("");
 
   // API 优先查询知识库，失败回退本地 mock
   useEffect(() => {
     setKb(null);
+    setSuggest(null);
+    setSaveMsg("");
     if (!open || !ingredient) return;
     let cancelled = false;
     (async () => {
@@ -68,6 +77,47 @@ export default function IngredientDetailSheet({
     ingredient.allergens?.length
       ? ingredient.allergens.join(" / ")
       : kb?.allergens?.join(" / ");
+
+  /** 搜索外部/AI 资料（需求 6） */
+  const handleSuggest = async () => {
+    setSuggesting(true);
+    setSuggest(null);
+    const res = await fetchKnowledgeSuggest(ingredient.finalText, "ingredient");
+    setSuggest(res);
+    setSuggesting(false);
+  };
+
+  /** 一键加入知识库/更新（来源标注后由用户决定，自动刷新详情） */
+  const handleSaveToKb = async () => {
+    if (!suggest?.data) return;
+    setSaving(true);
+    setSaveMsg("");
+    const d = suggest.data;
+    const res = await upsertKbItem({
+      kind: "ingredient",
+      name: d.name,
+      aliases: [],
+      category: "other",
+      one_liner: d.oneLiner,
+      purpose: d.purpose,
+      extra: {
+        detail: d.detail,
+        caution: d.caution,
+        audience: d.audience,
+      },
+      source: suggest.source === "wikipedia" ? `Wikipedia 中文（${suggest.via}）` : `AI 生成（${suggest.via}）`,
+    });
+    setSaving(false);
+    if (res.ok) {
+      setSaveMsg(res.updated ? "已更新知识库" : "已加入知识库");
+      // 自动刷新为知识库命中态
+      const fresh = await fetchKnowledge(d.name, "ingredient");
+      if (fresh?.type === "ingredient") setKb(fresh.data as KbData);
+      setSuggest(null);
+    } else {
+      setSaveMsg(`保存失败：${res.error ?? "未知错误"}`);
+    }
+  };
 
   return (
     <BottomSheet
@@ -130,6 +180,25 @@ export default function IngredientDetailSheet({
               </div>
             )}
 
+            {/* 第二层补充：注意事项 + 不适宜人群 */}
+            {(kb.caution || kb.audience) && (
+              <div className={styles.detailBlock}>
+                <h4>注意事项 / 不适宜人群</h4>
+                {kb.caution && (
+                  <div className={styles.field}>
+                    <span className={styles.fieldLabel}>注意事项</span>
+                    <span className={styles.fieldValue}>{kb.caution}</span>
+                  </div>
+                )}
+                {kb.audience && (
+                  <div className={styles.field}>
+                    <span className={styles.fieldLabel}>不适宜人群</span>
+                    <span className={styles.fieldValue}>{kb.audience}</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* 第三层：数据来源（可折叠） */}
             <div className={styles.advanced}>
               <button className={styles.advancedToggle} onClick={() => setShowAdvanced((v) => !v)}>
@@ -169,6 +238,57 @@ export default function IngredientDetailSheet({
               <span className={styles.fieldLabel}>置信度</span>
               <Chip confidence={ingredient.confidence} />
             </div>
+
+            {/* 动态加载外部/AI 资料（需求 6） */}
+            {!suggest && !suggesting && (
+              <button className={styles.suggestBtn} onClick={handleSuggest}>
+                <span className="material-symbols-rounded" style={{ fontSize: 16 }}>travel_explore</span>
+                搜索外部资料（Wikipedia / AI）
+              </button>
+            )}
+            {suggesting && (
+              <p className={styles.suggestLoading}>
+                <span className="material-symbols-rounded" style={{ fontSize: 16 }}>progress_activity</span>
+                正在检索资料…
+              </p>
+            )}
+
+            {suggest && suggest.ok && suggest.data && (
+              <div className={styles.suggestCard}>
+                <div className={styles.suggestHead}>
+                  <span>资料建议</span>
+                  <span className={`${styles.sourceTag} ${suggest.source === "wikipedia" ? styles.sourceWiki : styles.sourceAi}`}>
+                    {suggest.source === "wikipedia" ? "Wikipedia 中文" : "AI 生成"}
+                  </span>
+                </div>
+                <p className={styles.suggestLine}>{suggest.data.oneLiner}</p>
+                {suggest.data.purpose && (
+                  <p className={styles.suggestLine}><b>用途：</b>{suggest.data.purpose}</p>
+                )}
+                {suggest.data.detail && (
+                  <p className={styles.suggestLine}><b>详情：</b>{suggest.data.detail}</p>
+                )}
+                {suggest.data.caution && (
+                  <p className={styles.suggestLine}><b>注意事项：</b>{suggest.data.caution}</p>
+                )}
+                {suggest.data.audience && (
+                  <p className={styles.suggestLine}><b>不适宜人群：</b>{suggest.data.audience}</p>
+                )}
+                <div className={styles.suggestActions}>
+                  <span className={styles.suggestVia}>
+                    {suggest.source === "ai" ? "AI 生成内容仅供参考，请人工核对后使用" : `来源：${suggest.via}`}
+                  </span>
+                  <button className={styles.suggestSaveBtn} onClick={handleSaveToKb} disabled={saving}>
+                    {saving ? "保存中…" : "加入知识库"}
+                  </button>
+                </div>
+                {saveMsg && <p className={styles.suggestMsg}>{saveMsg}</p>}
+              </div>
+            )}
+
+            {suggest && !suggest.ok && (
+              <p className={styles.suggestError}>{suggest.error ?? "检索失败，请稍后重试"}</p>
+            )}
           </>
         )}
       </div>

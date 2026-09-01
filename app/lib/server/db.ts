@@ -66,7 +66,7 @@ export interface ScanRecordInput {
   snapshot?: unknown;
 }
 
-const SEED_VERSION = "1";
+const SEED_VERSION = "2";
 
 function dbPath(): string {
   return process.env.DB_FILE || path.join(process.cwd(), "data", "foodscan.db");
@@ -214,6 +214,8 @@ function ingredientToRow(name: string, kb: IngredientKnowledge) {
       processingNature: kb.processingNature ?? "",
       detail: kb.detail ?? "",
       allergens: kb.allergens ?? [],
+      caution: kb.caution ?? "",
+      audience: kb.audience ?? "",
     }),
     source: kb.source,
   };
@@ -490,6 +492,22 @@ export function updateKb(id: number, input: KbInput): { ok: true } | { error: st
 export function deleteKb(id: number): boolean {
   const db = getDb();
   return db.prepare(`DELETE FROM kb_entries WHERE id = ?`).run(id).changes > 0;
+}
+
+/** 按 kind+name upsert（存在则更新，否则新增）。供「一键加入知识库/更新」使用 */
+export function upsertKb(input: KbInput): { id: number; updated: boolean } {
+  const db = getDb();
+  const name = (input.name ?? "").trim();
+  const exists = db
+    .prepare(`SELECT id FROM kb_entries WHERE kind = ? AND name = ?`)
+    .get(input.kind, name) as { id: number } | undefined;
+  if (exists) {
+    updateKb(exists.id, input);
+    return { id: exists.id, updated: true };
+  }
+  const created = createKb(input);
+  if ("error" in created) return { id: 0, updated: false };
+  return { id: created.id, updated: false };
 }
 
 // ---------- 扫描历史 ----------

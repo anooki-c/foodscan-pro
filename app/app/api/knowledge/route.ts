@@ -7,6 +7,7 @@ import {
   createKb,
   updateKb,
   deleteKb,
+  upsertKb,
   reseedBuiltin,
   type KbKind,
   type KbInput,
@@ -91,6 +92,8 @@ function toDetailShape(kind: KbKind, row: ReturnType<typeof getKbById>): Ingredi
     processingNature: String(extra.processingNature ?? ""),
     detail: String(extra.detail ?? ""),
     allergens: Array.isArray(extra.allergens) ? extra.allergens.map(String) : [],
+    caution: String(extra.caution ?? ""),
+    audience: String(extra.audience ?? ""),
     source: row.source,
     updatedAt: row.updated_at,
   } satisfies IngredientKnowledge;
@@ -166,6 +169,18 @@ export async function POST(req: Request) {
   if ("error" in parsed) {
     return NextResponse.json({ ok: false, error: parsed.error }, { status: 400 });
   }
+
+  // 一键「加入知识库/更新」：同名存在则更新，否则新增（详情弹窗动态加载用）
+  if (searchParams.get("action") === "upsert") {
+    const result = upsertKb(parsed);
+    return NextResponse.json({
+      ok: result.id > 0,
+      id: result.id || undefined,
+      updated: result.updated,
+      error: result.id > 0 ? undefined : "保存失败",
+    });
+  }
+
   const result = createKb(parsed);
   if ("error" in result) {
     return NextResponse.json({ ok: false, error: result.error }, { status: 409 });

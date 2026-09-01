@@ -97,6 +97,37 @@ export async function fetchKnowledge(
   }
 }
 
+/** 知识库动态加载建议（Wikipedia 优先 / AI 兜底，不自动入库） */
+export interface KbSuggest {
+  ok: boolean;
+  source?: "wikipedia" | "ai";
+  type?: "ingredient" | "additive";
+  via?: string;
+  data?: {
+    name: string;
+    oneLiner: string;
+    purpose: string;
+    detail: string;
+    caution: string;
+    audience: string;
+  };
+  error?: string;
+  hint?: string;
+}
+export async function fetchKnowledgeSuggest(
+  name: string,
+  type: "ingredient" | "additive"
+): Promise<KbSuggest> {
+  try {
+    const res = await fetch(
+      `/api/knowledge/suggest?name=${encodeURIComponent(name)}&type=${type}`
+    );
+    return await res.json();
+  } catch {
+    return { ok: false, error: "网络错误，请稍后重试" };
+  }
+}
+
 // ---------- 知识库管理（后台 CRUD） ----------
 
 export type KbKind = "ingredient" | "additive" | "allergen";
@@ -167,6 +198,25 @@ export async function fetchKbItem(id: number): Promise<KbItem | null> {
 export async function createKbItem(input: Record<string, unknown>): Promise<{ ok: boolean; error?: string; id?: number }> {
   try {
     const res = await fetch("/api/knowledge", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+    return await res.json();
+  } catch {
+    return { ok: false, error: "网络错误" };
+  }
+}
+
+/** 一键「加入知识库/更新」：同名存在则更新，否则新增 */
+export async function upsertKbItem(input: Record<string, unknown>): Promise<{
+  ok: boolean;
+  error?: string;
+  id?: number;
+  updated?: boolean;
+}> {
+  try {
+    const res = await fetch("/api/knowledge?action=upsert", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
@@ -315,6 +365,30 @@ export async function saveAdminConfig(patch: {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(patch),
+    });
+    return await res.json();
+  } catch {
+    return { ok: false, error: "网络错误" };
+  }
+}
+
+/** 后台：连通性测试（OCR / AI，使用当前表单临时配置，不落库） */
+export async function testConnection(
+  kind: "ocr" | "ai",
+  params: {
+    provider?: string;
+    apiUrl: string;
+    apiKey: string;
+    apiSecret?: string;
+    model?: string;
+    timeoutMs: number;
+  }
+): Promise<{ ok: boolean; latencyMs?: number; detail?: string; error?: string }> {
+  try {
+    const res = await fetch("/api/admin/test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind, ...params }),
     });
     return await res.json();
   } catch {

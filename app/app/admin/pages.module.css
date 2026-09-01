@@ -269,6 +269,71 @@ table.data tr:last-child td {
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px var(--color-primary-fixed);
 }
+
+/* 密钥输入框 + 显示/隐藏切换 icon（需求：key 默认隐藏，可点按查看明文） */
+.pwdWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.pwdWrap input {
+  width: 100%;
+  padding-right: 40px;
+}
+.pwdToggle {
+  position: absolute;
+  right: 4px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  border-radius: var(--radius-default);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.pwdToggle:hover {
+  background: var(--color-surface-container);
+  color: var(--color-text-primary);
+}
+.pwdToggle:active {
+  transform: scale(0.94);
+}
+.pwdToggle span {
+  font-size: 19px;
+  font-variation-settings: "FILL" 0;
+}
+
+/* 连通性测试结果条 */
+.testResult {
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-default);
+  font: 500 12px/18px var(--font-body);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.testResult .icon {
+  font-size: 18px;
+  line-height: 18px;
+  flex-shrink: 0;
+}
+.testOk {
+  background: var(--color-status-natural-bg);
+  color: var(--color-status-natural-fg);
+}
+.testErr {
+  background: var(--color-status-additive-bg);
+  color: var(--color-status-additive-fg);
+}
+.testing {
+  color: var(--color-text-secondary);
+  background: var(--color-surface-container);
+}
 .btnPrimary {
   height: 40px;
   padding: 0 20px;

@@ -120,6 +120,96 @@
   gap: 10px;
 }
 
+/* ---- 矩形框选（需求：上传后圈选区域，减少无用信息干扰识别） ---- */
+.cropStage {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-default);
+  overflow: hidden;
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-container-lowest);
+  line-height: 0;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.cropImg {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+}
+/* 选区边框 + 8 个控制点 */
+.cropBox {
+  position: absolute;
+  border: 1.5px solid var(--color-primary);
+  box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.45);
+  pointer-events: none;
+}
+.handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border: 1.5px solid var(--color-primary);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.handle_nw { left: 0; top: 0; cursor: nwse-resize; }
+.handle_ne { left: 100%; top: 0; cursor: nesw-resize; }
+.handle_sw { left: 0; top: 100%; cursor: nesw-resize; }
+.handle_se { left: 100%; top: 100%; cursor: nwse-resize; }
+.handle_n  { left: 50%; top: 0; cursor: ns-resize; }
+.handle_s  { left: 50%; top: 100%; cursor: ns-resize; }
+.handle_e  { left: 100%; top: 50%; cursor: ew-resize; }
+.handle_w  { left: 0; top: 50%; cursor: ew-resize; }
+/* 未框选时的提示浮层 */
+.cropHint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  font: 500 13px/18px var(--font-body);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  background: rgba(15, 23, 42, 0.25);
+  pointer-events: none;
+  line-height: 1.2;
+}
+.cropHint span {
+  font-size: 30px;
+}
+/* 清除选区工具栏 */
+.cropToolbar {
+  display: flex;
+  justify-content: center;
+}
+.cropToolBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-container-lowest);
+  color: var(--color-text-secondary);
+  font: 500 12px/16px var(--font-body);
+  cursor: pointer;
+}
+.cropToolBtn:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-primary);
+}
+.cropToolBtn span {
+  font-size: 16px;
+}
+
 .errorBox {
   display: flex;
   gap: 10px;
