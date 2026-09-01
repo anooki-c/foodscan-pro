@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppBar from "@/components/AppBar";
 import Button from "@/components/Button";
 import { fetchOcr } from "@/lib/services/api";
 import { useAnalysisStore } from "@/store/analysis";
 import styles from "./page.module.css";
 
-type Status = "idle" | "ready" | "loading";
+type Status = "idle" | "ready" | "loading" | "success";
 
 /** 相对坐标选区（0~1，相对预览图显示区域；裁剪时按原图像素换算） */
 interface Rect {
@@ -92,6 +92,18 @@ export default function PhotoScanPage() {
   const [drag, setDrag] = useState<DragState | null>(null);
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  /** 识别成功结果（展示用，短暂停留后跳转确认页） */
+  const [ocrResult, setOcrResult] = useState<{ count: number } | null>(null);
+  /** 成功跳转定时器（reset/卸载时清理） */
+  const jumpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearJump = () => {
+    if (jumpTimer.current) {
+      clearTimeout(jumpTimer.current);
+      jumpTimer.current = null;
+    }
+  };
+  useEffect(() => clearJump, []);
 
   /** 把指针事件坐标换算为相对预览区域的 0~1 坐标 */
   const toRel = (e: { clientX: number; clientY: number }) => {
@@ -140,7 +152,7 @@ export default function PhotoScanPage() {
   };
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (status === "loading") return;
+    if (status === "loading" || status === "success") return;
     const p = toRel(e);
     // 已有选区：优先命中控制点 → 调整；其次在框内 → 移动；否则清空重新画框
     if (rect) {
@@ -200,7 +212,9 @@ export default function PhotoScanPage() {
       setError("请选择 JPG / PNG / WEBP 格式的图片");
       return;
     }
+    clearJump();
     setError("");
+    setOcrResult(null);
     try {
       const img = await loadImage(file);
       setSourceImg(img);
@@ -214,9 +228,11 @@ export default function PhotoScanPage() {
   };
 
   const startOcr = async () => {
-    if (!sourceImg) return;
+    if (!sourceImg || status === "loading") return;
+    clearJump();
     setStatus("loading");
     setError("");
+    setOcrResult(null);
     try {
       const { data, mime } = await cropAndCompress(sourceImg, rect);
       const res = await fetchOcr(data, mime);
@@ -233,9 +249,13 @@ export default function PhotoScanPage() {
         setError(hint);
         return;
       }
-      // 识别成功 → 写入确认页草稿，进入人工核对
+      // 识别成功 → 先写入确认页草稿并展示成功结果，短暂停留后自动进入人工核对
       useAnalysisStore.getState().setDraftIngredients(res.ingredients);
-      window.location.href = "/confirm?source=ocr";
+      setOcrResult({ count: res.ingredients.length });
+      setStatus("success");
+      jumpTimer.current = setTimeout(() => {
+        window.location.href = "/confirm?source=ocr";
+      }, 1400);
     } catch (e) {
       setStatus("ready");
       setError(e instanceof Error ? e.message : "图片处理失败");
@@ -243,12 +263,14 @@ export default function PhotoScanPage() {
   };
 
   const reset = () => {
+    clearJump();
     setPreviewUrl("");
     setSourceImg(null);
     setRect(null);
     setDrag(null);
     setStatus("idle");
     setError("");
+    setOcrResult(null);
   };
 
   return (
@@ -330,15 +352,27 @@ export default function PhotoScanPage() {
                     </div>
                   </>
                 )}
-                {!rect && (
+                {!rect && status !== "loading" && (
                   <div className={styles.cropHint}>
                     <span className="material-symbols-rounded">crop_free</span>
                     拖拽框选配料表区域，减少无用信息
                   </div>
                 )}
+                {/* 识别中视觉提示：遮罩压暗 + 旋转动画，同时拦截所有指针操作 */}
+                {status === "loading" && (
+                  <div className={styles.ocrOverlay}>
+                    <span className={`${styles.ocrSpinner} material-symbols-rounded`}>
+                      progress_activity
+                    </span>
+                    <p>正在识别配料表…</p>
+                    <p className={styles.ocrOverlaySub}>
+                      请稍候，识别结果将在此展示
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {rect && (
+              {rect && status === "ready" && (
                 <div className={styles.cropToolbar}>
                   <button className={styles.cropToolBtn} onClick={() => setRect(null)}>
                     <span className="material-symbols-rounded">backspace</span>
@@ -352,7 +386,7 @@ export default function PhotoScanPage() {
                   variant="ghost"
                   size="md"
                   onClick={reset}
-                  disabled={status === "loading"}
+                  disabled={status === "loading" || status === "success"}
                 >
                   重新选择
                 </Button>
@@ -360,7 +394,7 @@ export default function PhotoScanPage() {
                   fullWidth
                   size="md"
                   onClick={startOcr}
-                  disabled={status === "loading"}
+                  disabled={status === "loading" || status === "success"}
                 >
                   <span className="material-symbols-rounded" style={{ fontSize: 18 }}>
                     {status === "loading" ? "progress_activity" : "document_scanner"}
@@ -375,7 +409,22 @@ export default function PhotoScanPage() {
             </div>
           )}
 
-          {error && (
+          {/* 识别成功结果提示：绿色面板短暂停留后自动进入核对 */}
+          {status === "success" && ocrResult && (
+            <div className={styles.successBox}>
+              <span className="material-symbols-rounded" style={{ fontSize: 20 }}>
+                check_circle
+              </span>
+              <div>
+                <p className={styles.successTitle}>识别成功</p>
+                <p className={styles.successDesc}>
+                  共识别 {ocrResult.count} 项配料，即将进入人工核对…
+                </p>
+              </div>
+            </div>
+          )}
+
+          {error && status !== "loading" && (
             <div className={styles.errorBox}>
               <span className="material-symbols-rounded" style={{ fontSize: 18 }}>
                 error

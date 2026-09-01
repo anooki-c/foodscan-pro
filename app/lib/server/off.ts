@@ -71,12 +71,16 @@ export async function queryProductByBarcode(
 
 /** 简易本地 OCR 兜底：从文本拆分配料（真实接入时替换为第三方 OCR API） */
 export async function splitIngredientText(text: string): Promise<Ingredient[]> {
-  const parts = text
-    .split(/[、，,;；\n]/)
+  // 去掉「配料表：」标题前缀及常见非配料段落，再按标点/换行切分
+  const cleaned = text
+    .replace(/^[\s\S]*?配料表[:：]/i, "")
+    .split(/[、，,;；\n。]/)
     .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+    .filter((s) => s.length > 0)
+    .filter((s) => !/^(净含量|保质期|生产日期|储存条件|贮存条件|生产商|制造商|地址|联系方式|配料表|致敏原|过敏原|食用方法|营养成分)/.test(s))
+    .filter((s) => !/^(g|克|ml|毫升|kg|千克|%|%)$/.test(s));
 
-  return parts.map((name, i) => ({
+  return cleaned.map((name, i) => ({
     id: `ocr-${Date.now()}-${i}`,
     originalText: name,
     finalText: name,
@@ -509,6 +513,78 @@ export async function callAiIngredientInfo(params: {
       caution: String(json.caution ?? ""),
       audience: String(json.audience ?? ""),
     };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * AI 从 OCR 原始文本中提取结构化配料列表（需求 3 增强）
+ *
+ * OCR 文本通常包含"净含量/保质期/生产商/配料表"等杂质，规则切分会产生垃圾项。
+ * 此函数让 AI 只提取真正的配料项，返回规范名称列表；未配置 AI 或失败返回 null
+ * （由上层回退到 splitIngredientText 规则切分）。
+ */
+export async function callAiExtractIngredients(
+  text: string
+): Promise<Array<{ name: string }> | null> {
+  const cfg = getServerConfig();
+  if (!cfg.ai.enabled || !cfg.ai.apiUrl || !cfg.ai.apiKey) return null;
+  if (!text.trim()) return null;
+
+  const systemPrompt =
+    "你是食品配料表解析助手。只从用户提供的 OCR 文本中提取真正的食品配料成分，剔除" +
+    "「配料表」「净含量」「保质期」「生产日期」「储存条件」「生产商」「地址」「联系方式」等非配料信息。";
+  const userPrompt =
+    `以下是食品包装 OCR 识别文本：\n"""${text.slice(0, 1500)}"""\n` +
+    "请提取所有配料成分，严格输出 JSON 数组（不要输出其他内容），每个元素为 {\"name\":\"配料名\"}，" +
+    "按出现顺序排列，只保留确定是配料的项，括号内的修饰说明归入 name 一并保留。";
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), cfg.ai.timeoutMs);
+  try {
+    const res = await fetch(cfg.ai.apiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${cfg.ai.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: cfg.ai.model || "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature: 0.1,
+      }),
+      signal: controller.signal,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content ?? null;
+    if (!reply) return null;
+    const json = extractJson(reply);
+    if (!json) return null;
+    // 兼容两种结构：直接数组，或 { ingredients: [...] }
+    const list = Array.isArray(json)
+      ? json
+      : Array.isArray((json as Record<string, unknown>).ingredients)
+        ? ((json as Record<string, unknown>).ingredients as unknown[])
+        : null;
+    if (!list) return null;
+    const items = list
+      .map((it) => {
+        if (typeof it === "string") return { name: it.trim() };
+        if (it && typeof it === "object") {
+          const name = String((it as Record<string, unknown>).name ?? "").trim();
+          return name ? { name } : null;
+        }
+        return null;
+      })
+      .filter((x): x is { name: string } => x !== null && x.name.length > 0);
+    return items.length ? items : null;
   } catch {
     return null;
   } finally {

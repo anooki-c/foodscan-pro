@@ -172,13 +172,22 @@ export async function POST(req: Request) {
 
   // 一键「加入知识库/更新」：同名存在则更新，否则新增（详情弹窗动态加载用）
   if (searchParams.get("action") === "upsert") {
-    const result = upsertKb(parsed);
-    return NextResponse.json({
-      ok: result.id > 0,
-      id: result.id || undefined,
-      updated: result.updated,
-      error: result.id > 0 ? undefined : "保存失败",
-    });
+    try {
+      const result = upsertKb(parsed);
+      return NextResponse.json({
+        ok: result.id > 0,
+        id: result.id || undefined,
+        updated: result.updated,
+        error: result.id > 0 ? undefined : "保存失败",
+      });
+    } catch (e) {
+      // 数据库异常时返回 JSON（避免 Next.js 默认 500 HTML 页导致前端误报「网络错误」）
+      console.error("[knowledge] upsert error:", e);
+      return NextResponse.json(
+        { ok: false, error: `保存失败：${e instanceof Error ? e.message : "数据库异常"}` },
+        { status: 500 }
+      );
+    }
   }
 
   const result = createKb(parsed);

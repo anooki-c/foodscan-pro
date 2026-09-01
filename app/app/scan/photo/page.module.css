@@ -185,6 +185,67 @@
 .cropHint span {
   font-size: 30px;
 }
+
+/* ---- OCR 识别中遮罩：压暗图片 + 旋转动画，锁定操作 ---- */
+.ocrOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(15, 23, 42, 0.62);
+  color: #fff;
+  z-index: 5;
+  line-height: 1.2;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+.ocrSpinner {
+  font-size: 38px;
+  color: #fff;
+  animation: ocrSpin 1s linear infinite;
+}
+.ocrOverlay p {
+  margin: 0;
+  font: 600 15px/22px var(--font-body);
+}
+.ocrOverlaySub {
+  font: 400 12px/18px var(--font-body) !important;
+  opacity: 0.75;
+}
+@keyframes ocrSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- 识别成功结果面板（绿色）---- */
+.successBox {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius-default);
+  background: var(--color-status-natural-bg);
+  color: var(--color-status-natural-fg);
+  border: 1px solid var(--color-status-natural-border);
+}
+.successBox > span {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.successTitle {
+  margin: 0;
+  font: 600 14px/20px var(--font-body);
+}
+.successDesc {
+  margin: 2px 0 0;
+  font: 400 13px/19px var(--font-body);
+  opacity: 0.88;
+}
 /* 清除选区工具栏 */
 .cropToolbar {
   display: flex;

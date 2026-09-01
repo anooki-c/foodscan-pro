@@ -28,22 +28,28 @@ export interface OcrResult {
   code?: string;
   provider?: string;
   confidence?: number;
+  aiParsed?: boolean;
   ingredients?: Ingredient[];
 }
 export async function fetchOcr(image: string, mime = "jpeg"): Promise<OcrResult> {
   try {
+    // 30s 超时兜底：OCR 服务挂起时给出明确错误而非无限等待
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30000);
     const res = await fetch("/api/ocr", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ image, mime }),
+      signal: controller.signal,
     });
+    clearTimeout(timer);
     const data = await res.json();
     if (!res.ok) {
       return { ok: false, error: data.error ?? "识别失败", code: data.code };
     }
     return { ok: true, ...data };
   } catch {
-    return { ok: false, error: "网络错误，请稍后重试" };
+    return { ok: false, error: "网络错误，请稍后重试", code: "OCR_NETWORK_ERROR" };
   }
 }
 
@@ -221,7 +227,14 @@ export async function upsertKbItem(input: Record<string, unknown>): Promise<{
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
-    return await res.json();
+    // 后端异常返回 JSON 错误（含真实原因）；极端情况（500 HTML）时兜底提示
+    const text = await res.text();
+    try {
+      const data = JSON.parse(text);
+      return data as { ok: boolean; error?: string; id?: number; updated?: boolean };
+    } catch {
+      return { ok: false, error: `服务器异常（HTTP ${res.status}），请稍后重试` };
+    }
   } catch {
     return { ok: false, error: "网络错误" };
   }

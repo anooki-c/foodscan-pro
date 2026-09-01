@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { callThirdPartyOcr, splitIngredientText } from "@/lib/server/off";
+import {
+  callThirdPartyOcr,
+  splitIngredientText,
+  callAiExtractIngredients,
+} from "@/lib/server/off";
 import { getServerConfig } from "@/lib/server/config";
 
 export const dynamic = "force-dynamic";
@@ -43,7 +47,26 @@ export async function POST(req: Request) {
   }
 
   if (third && third.text) {
-    const ingredients = await splitIngredientText(third.text);
+    // 优先 AI 从 OCR 文本提取结构化配料（剔除净含量/保质期等杂质）；失败回退规则切分
+    const aiItems = await callAiExtractIngredients(third.text);
+    let ingredients;
+    let aiParsed = false;
+    if (aiItems && aiItems.length > 0) {
+      ingredients = aiItems.map((it, i) => ({
+        id: `ocr-${Date.now()}-${i}`,
+        originalText: it.name,
+        finalText: it.name,
+        originalPos: i + 1,
+        finalPos: i + 1,
+        source: "ocr" as const,
+        confidence: "medium" as const,
+        isManual: false,
+        needsConfirm: true,
+      }));
+      aiParsed = true;
+    } else {
+      ingredients = await splitIngredientText(third.text);
+    }
     // OCR 识别结果需要人工核对
     ingredients.forEach((i) => {
       i.needsConfirm = true;
@@ -54,6 +77,7 @@ export async function POST(req: Request) {
       provider: cfg.ocr.provider,
       confidence: third.confidence,
       usedProviders: [cfg.ocr.provider],
+      aiParsed,
       ingredients,
     });
   }
