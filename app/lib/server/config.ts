@@ -40,7 +40,11 @@ export function getAdminConfig() {
   const cfg = loadConfig();
   return {
     ...cfg,
-    ocr: { ...cfg.ocr, apiKey: maskSecret(cfg.ocr.apiKey) },
+    ocr: {
+      ...cfg.ocr,
+      apiKey: maskSecret(cfg.ocr.apiKey),
+      apiSecret: maskSecret(cfg.ocr.apiSecret),
+    },
     ai: { ...cfg.ai, apiKey: maskSecret(cfg.ai.apiKey) },
   };
 }

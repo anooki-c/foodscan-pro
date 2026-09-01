@@ -291,7 +291,7 @@ export async function forceOffUpdate(): Promise<{
 /** 后台：读取完整配置（密钥脱敏） */
 export async function fetchAdminConfig(): Promise<{
   offEnabled: boolean;
-  ocr: { provider: string; apiUrl: string; apiKey: string; enabled: boolean; timeoutMs: number; confidenceThreshold: number };
+  ocr: { provider: string; apiUrl: string; apiKey: string; apiSecret: string; enabled: boolean; timeoutMs: number; confidenceThreshold: number };
   ai: { provider: string; apiUrl: string; apiKey: string; model: string; enabled: boolean; timeoutMs: number };
 } | null> {
   try {
@@ -307,7 +307,7 @@ export async function fetchAdminConfig(): Promise<{
 /** 后台：保存配置（部分字段更新） */
 export async function saveAdminConfig(patch: {
   offEnabled?: boolean;
-  ocr?: Partial<{ provider: string; apiUrl: string; apiKey: string; enabled: boolean; timeoutMs: number; confidenceThreshold: number }>;
+  ocr?: Partial<{ provider: string; apiUrl: string; apiKey: string; apiSecret: string; enabled: boolean; timeoutMs: number; confidenceThreshold: number }>;
   ai?: Partial<{ provider: string; apiUrl: string; apiKey: string; model: string; enabled: boolean; timeoutMs: number }>;
 }): Promise<{ ok: boolean; error?: string; config?: unknown }> {
   try {

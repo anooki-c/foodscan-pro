@@ -36,6 +36,10 @@ export async function PUT(req: Request) {
         patch.ocr?.apiKey && !patch.ocr.apiKey.includes("•")
           ? patch.ocr.apiKey
           : current.ocr.apiKey,
+      apiSecret:
+        patch.ocr?.apiSecret && !patch.ocr.apiSecret.includes("•")
+          ? patch.ocr.apiSecret
+          : current.ocr.apiSecret,
       enabled: patch.ocr?.enabled ?? current.ocr.enabled,
       timeoutMs: patch.ocr?.timeoutMs ?? current.ocr.timeoutMs,
       confidenceThreshold: patch.ocr?.confidenceThreshold ?? current.ocr.confidenceThreshold,

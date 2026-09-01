@@ -247,7 +247,24 @@ table.data tr:last-child td {
   font: 500 13px/1 var(--font-body);
   color: var(--color-text-primary);
 }
-.field input:focus {
+.field select {
+  height: 40px;
+  border-radius: var(--radius-default);
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface-container-lowest);
+  padding: 0 12px;
+  font: 500 13px/1 var(--font-body);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 34px;
+}
+.field input:focus,
+.field select:focus {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 4px var(--color-primary-fixed);

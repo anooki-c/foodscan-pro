@@ -1,5 +1,6 @@
 import { getServerConfig } from "./config";
 import { getOffCache, setOffCache } from "./db";
+import type { AppConfig } from "./config-store";
 import type { Ingredient, Product } from "../types";
 
 /**
@@ -89,14 +90,92 @@ export async function splitIngredientText(text: string): Promise<Ingredient[]> {
 
 /**
  * 第三方 OCR 调用（PRD §7.4）
+ * 支持两种协议：
+ *  - provider === "baidu"：百度云 OCR 通用文字识别（AK/SK → OAuth2 token → general_basic）
+ *  - 其他：自定义 OpenAI 风格接口（POST { apiUrl } + Bearer + { image }，解析 { text, confidence }）
  * 未配置时返回 null → 由上层回退到本地拆分。
  */
+
+/** 百度云 OCR 域名与接口 */
+const BAIDU_OCR_TOKEN_URL = "https://aip.baidubce.com/oauth/2.0/token";
+const BAIDU_OCR_API = "https://aip.baidubce.com/rest/2.0/ocr/v1/general_basic";
+/** 百度 access_token 有效期 30 天，提前 1 天过期刷新 */
+const BAIDU_TOKEN_TTL_MS = 29 * 24 * 60 * 60 * 1000;
+
+/** 进程内缓存百度 access_token（重启后重新获取，无需落盘） */
+let baiduTokenCache: { token: string; expiresAt: number } | null = null;
+
+async function getBaiduAccessToken(
+  apiKey: string,
+  apiSecret: string
+): Promise<string | null> {
+  if (baiduTokenCache && Date.now() < baiduTokenCache.expiresAt) {
+    return baiduTokenCache.token;
+  }
+  try {
+    const url = `${BAIDU_OCR_TOKEN_URL}?grant_type=client_credentials&client_id=${encodeURIComponent(
+      apiKey
+    )}&client_secret=${encodeURIComponent(apiSecret)}`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.access_token) return null;
+    baiduTokenCache = {
+      token: data.access_token as string,
+      expiresAt: Date.now() + BAIDU_TOKEN_TTL_MS,
+    };
+    return baiduTokenCache.token;
+  } catch {
+    return null;
+  }
+}
+
+/** 百度云 OCR 分支：general_basic 表单请求 → words_result 拼接 */
+async function callBaiduOcr(
+  imageBase64: string,
+  cfg: AppConfig["ocr"]
+): Promise<{ text: string; confidence: number } | null> {
+  const token = await getBaiduAccessToken(cfg.apiKey, cfg.apiSecret);
+  if (!token) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), cfg.timeoutMs);
+  try {
+    const body = new URLSearchParams();
+    body.set("image", imageBase64);
+    const res = await fetch(`${BAIDU_OCR_API}?access_token=${encodeURIComponent(token)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body,
+      signal: controller.signal,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.error_code !== undefined) return null; // 业务错误码（如 token 过期）
+    const words: string[] = (data.words_result ?? []).map(
+      (item: { words?: string }) => item.words ?? ""
+    );
+    if (!words.length) return null;
+    return { text: words.join("\n"), confidence: 85 };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function callThirdPartyOcr(
   imageBase64: string
 ): Promise<{ text: string; confidence: number } | null> {
   const cfg = getServerConfig();
-  if (!cfg.ocr.enabled || !cfg.ocr.apiUrl || !cfg.ocr.apiKey) return null;
+  if (!cfg.ocr.enabled || !cfg.ocr.apiKey) return null;
 
+  if (cfg.ocr.provider === "baidu") {
+    return callBaiduOcr(imageBase64, cfg.ocr);
+  }
+
+  // 自定义协议：必须配置 API 地址
+  if (!cfg.ocr.apiUrl) return null;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), cfg.ocr.timeoutMs);
   try {

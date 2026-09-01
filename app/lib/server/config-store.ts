@@ -18,6 +18,8 @@ export interface AppConfig {
     provider: string;
     apiUrl: string;
     apiKey: string;
+    /** 百度云 OCR 需要 Secret Key（SK），与 apiKey（AK）成对 */
+    apiSecret: string;
     enabled: boolean;
     timeoutMs: number;
     confidenceThreshold: number;
@@ -38,15 +40,16 @@ export function envDefaults(): AppConfig {
   return {
     offEnabled: (process.env.OFF_ENABLED ?? "true") !== "false",
     ocr: {
-      provider: process.env.OCR_PROVIDER ?? "none",
+      provider: process.env.OCR_PROVIDER ?? "custom",
       apiUrl: process.env.OCR_API_URL ?? "",
       apiKey: process.env.OCR_API_KEY ?? "",
+      apiSecret: process.env.OCR_API_SECRET ?? "",
       enabled: (process.env.OCR_ENABLED ?? "false") === "true",
       timeoutMs: Number(process.env.OCR_TIMEOUT_MS ?? 10000),
       confidenceThreshold: Number(process.env.OCR_CONFIDENCE_THRESHOLD ?? 80),
     },
     ai: {
-      provider: process.env.AI_PROVIDER ?? "none",
+      provider: process.env.AI_PROVIDER ?? "custom",
       apiUrl: process.env.AI_API_URL ?? "",
       apiKey: process.env.AI_API_KEY ?? "",
       model: process.env.AI_MODEL ?? "gpt-4o-mini",
@@ -76,6 +79,7 @@ export function loadConfig(): AppConfig {
       provider: saved.ocr?.provider ?? defaults.ocr.provider,
       apiUrl: saved.ocr?.apiUrl ?? defaults.ocr.apiUrl,
       apiKey: saved.ocr?.apiKey ?? defaults.ocr.apiKey,
+      apiSecret: saved.ocr?.apiSecret ?? defaults.ocr.apiSecret,
       enabled: saved.ocr?.enabled ?? defaults.ocr.enabled,
       timeoutMs: saved.ocr?.timeoutMs ?? defaults.ocr.timeoutMs,
       confidenceThreshold: saved.ocr?.confidenceThreshold ?? defaults.ocr.confidenceThreshold,
