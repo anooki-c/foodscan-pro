@@ -82,10 +82,19 @@ export default function SystemPage() {
 
       <div className={`${styles.card} ${styles.sectionGap}`}>
         <h3>更新日志</h3>
-        <div className={styles.statList}>
-          <div className={styles.statLine}><span className={styles.k}>V1.1.0 · 2026-09-01</span><span className={styles.v}>SQLite 持久化 + 知识库管理增删改查 + 扫描历史</span></div>
-          <div className={styles.statLine}><span className={styles.k}>V1.0.0 · 2026-09-01</span><span className={styles.v}>接入真实 OFF API / OCR / AI</span></div>
-          <div className={styles.statLine}><span className={styles.k}>V1.0.0-beta · 2026-08-31</span><span className={styles.v}>工程化落地 + 详情弹窗</span></div>
+        <div className={styles.logList}>
+          <div className={styles.logItem}>
+            <div className={styles.logVersion}>V1.1.0 · 2026-09-01</div>
+            <div className={styles.logDesc}>SQLite 持久化 + 知识库管理增删改查 + 扫描历史</div>
+          </div>
+          <div className={styles.logItem}>
+            <div className={styles.logVersion}>V1.0.0 · 2026-09-01</div>
+            <div className={styles.logDesc}>接入真实 OFF API / OCR / AI</div>
+          </div>
+          <div className={styles.logItem}>
+            <div className={styles.logVersion}>V1.0.0-beta · 2026-08-31</div>
+            <div className={styles.logDesc}>工程化落地 + 详情弹窗</div>
+          </div>
         </div>
       </div>
     </div>

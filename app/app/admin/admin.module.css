@@ -145,6 +145,14 @@
   .navItem:hover {
     background: rgba(255, 255, 255, 0.9);
   }
+  /* 选中态优先于 hover：移动端点击后 hover 会粘住，必须让渐变背景始终胜出 */
+  .navItem[aria-current="page"],
+  .navItem[aria-current="page"]:hover {
+    background: var(--gradient-cool);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(92, 107, 192, 0.3);
+  }
 
   .content {
     width: 100%;

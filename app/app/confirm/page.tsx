@@ -4,9 +4,8 @@ import { useMemo, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import AppBar from "@/components/AppBar";
 import Button from "@/components/Button";
-import Chip from "@/components/Chip";
-import BottomSheet from "@/components/BottomSheet";
 import IngredientRow from "@/components/IngredientRow";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import { useAnalysisStore, confirmDraft } from "@/store/analysis";
 import { CANDIDATES } from "@/lib/mock-data";
 import type { Ingredient } from "@/lib/types";
@@ -25,10 +24,12 @@ function ConfirmInner() {
     setDraftIngredients,
   } = useAnalysisStore();
 
-  const [editing, setEditing] = useState<Ingredient | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  /** 原地编辑的当前输入值 */
+  const [editText, setEditText] = useState("");
+  /** 离开编辑时待确认保存的条目 */
+  const [pendingSave, setPendingSave] = useState<Ingredient | null>(null);
   const [manualInput, setManualInput] = useState("");
-  /** 编辑弹层内独立输入（不与主界面新增输入框互相污染） */
-  const [editInput, setEditInput] = useState("");
   const [productName, setProductName] = useState("");
 
   // 编辑模式：从历史记录回填已识别的配料表与产品名（刷新页面也不丢失）
@@ -59,11 +60,52 @@ function ConfirmInner() {
     setManualInput("");
   };
 
+  const editing = useMemo(
+    () => draftIngredients.find((i) => i.id === editingId) ?? null,
+    [draftIngredients, editingId]
+  );
+
   const candidates = useMemo(() => {
     if (!editing) return [];
-    const key = Object.keys(CANDIDATES).find((k) => k && editing.finalText.includes(k));
+    const key = Object.keys(CANDIDATES).find((k) => k && editText.includes(k));
     return CANDIDATES[key ?? ""] ?? [];
-  }, [editing]);
+  }, [editing, editText]);
+
+  /** 原地编辑保存 */
+  const saveEdit = (ing: Ingredient) => {
+    const text = editText.trim();
+    updateDraftIngredient(ing.id, {
+      finalText: text || ing.finalText,
+      isManual: true,
+      confidence: "manual",
+      needsConfirm: false,
+    });
+    setEditingId(null);
+    setEditText("");
+  };
+
+  /** 原地编辑取消 */
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditText("");
+  };
+
+  /** 进入编辑态 */
+  const startEdit = (ing: Ingredient) => {
+    setEditText(ing.finalText);
+    setEditingId(ing.id);
+  };
+
+  /** 点击配料行其他区域（离开编辑）时，若有改动则弹确认 */
+  const handleRowBlur = (ing: Ingredient) => {
+    if (editingId !== ing.id) return; // 保存/取消按钮已抢先处理，编辑态已退出
+    const text = editText.trim();
+    if (!text || text === ing.finalText) {
+      cancelEdit();
+      return;
+    }
+    setPendingSave(ing);
+  };
 
   const handleConfirm = () => {
     if (draftIngredients.length === 0) return;
@@ -150,20 +192,72 @@ function ConfirmInner() {
               </p>
             </div>
           ) : (
-            draftIngredients.map((ing, idx) => (
-              <IngredientRow
-                key={ing.id}
-                ingredient={ing}
-                index={idx}
-                draggable
-                interactive
-                onEdit={(i) => {
-                  setEditing(i);
-                  setEditInput("");
-                }}
-                onDelete={(id) => deleteDraftIngredient(id)}
-              />
-            ))
+            draftIngredients.map((ing, idx) => {
+              const isEditing = editingId === ing.id;
+              if (isEditing) {
+                return (
+                  <div key={ing.id} className={styles.editRow}>
+                    <input
+                      className={styles.editInput}
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveEdit(ing);
+                        if (e.key === "Escape") cancelEdit();
+                      }}
+                      onBlur={() => handleRowBlur(ing)}
+                      autoFocus
+                      placeholder="输入配料名称…"
+                    />
+                    <div className={styles.editActions}>
+                      <button
+                        className={styles.editSave}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          saveEdit(ing);
+                        }}
+                      >
+                        <span className="material-symbols-rounded" style={{ fontSize: 16 }}>check</span>
+                      </button>
+                      <button
+                        className={styles.editCancel}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          cancelEdit();
+                        }}
+                      >
+                        <span className="material-symbols-rounded" style={{ fontSize: 16 }}>close</span>
+                      </button>
+                    </div>
+                    {candidates.length > 0 && (
+                      <div className={styles.candidateRow}>
+                        {candidates.map((c) => (
+                          <span
+                            key={c}
+                            className={`${styles.candidateChip} ${c === editText ? styles.candidateOn : ""}`}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => setEditText(c)}
+                          >
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              return (
+                <IngredientRow
+                  key={ing.id}
+                  ingredient={ing}
+                  index={idx}
+                  draggable
+                  interactive
+                  onEdit={startEdit}
+                  onDelete={(id) => deleteDraftIngredient(id)}
+                />
+              );
+            })
           )}
         </div>
 
@@ -182,80 +276,26 @@ function ConfirmInner() {
         </Button>
       </div>
 
-      {/* 编辑 BottomSheet */}
-      <BottomSheet
-        open={!!editing}
-        onClose={() => {
-          setEditing(null);
-          setEditInput("");
+      {/* 离开编辑时确认是否保存修改 */}
+      <ConfirmDialog
+        open={!!pendingSave}
+        title="保存修改？"
+        description={
+          pendingSave
+            ? `已将「${pendingSave.finalText}」修改为「${editText.trim()}」。是否保存这次修改？`
+            : ""
+        }
+        confirmText="保存"
+        cancelText="放弃"
+        onConfirm={() => {
+          if (pendingSave) saveEdit(pendingSave);
+          setPendingSave(null);
         }}
-        title="编辑配料"
-        sub={
-          editing && (
-            <>
-              当前：<strong>{editing.finalText}</strong>
-              {editing.needsConfirm && <Chip variant="warning" style={{ marginLeft: 6 }}>建议确认</Chip>}
-            </>
-          )
-        }
-        footer={
-          <>
-            <Button variant="ghost" size="md" onClick={() => setEditing(null)}>
-              取消
-            </Button>
-            <Button
-              variant="primary"
-              size="md"
-              style={{ flex: 1 }}
-              onClick={() => {
-                if (editing) {
-                  updateDraftIngredient(editing.id, {
-                    finalText: editInput.trim() || editing.finalText,
-                    isManual: true,
-                    confidence: "manual",
-                    needsConfirm: false,
-                  });
-                  setEditing(null);
-                  setEditInput("");
-                }
-              }}
-            >
-              保存
-            </Button>
-          </>
-        }
-      >
-        {editing && (
-          <>
-            <div className={styles.candidateList}>
-              {candidates.map((c) => (
-                <div
-                  key={c}
-                  className={`${styles.candidate} ${c === editing.finalText ? styles.selected : ""}`}
-                  onClick={() => {
-                    updateDraftIngredient(editing.id, {
-                      finalText: c,
-                      isManual: true,
-                      confidence: "manual",
-                      needsConfirm: false,
-                    });
-                    setEditInput("");
-                  }}
-                >
-                  <span className={styles.candidateName}>{c}</span>
-                  <span className={styles.candidateScore}>匹配度 {Math.max(60, 100 - c.length * 2)}%</span>
-                </div>
-              ))}
-            </div>
-            <input
-              className={styles.manualInput}
-              placeholder="或直接输入名称…"
-              value={editInput}
-              onChange={(e) => setManualInput(e.target.value)}
-            />
-          </>
-        )}
-      </BottomSheet>
+        onCancel={() => {
+          cancelEdit();
+          setPendingSave(null);
+        }}
+      />
     </div>
   );
 }

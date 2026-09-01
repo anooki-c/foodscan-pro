@@ -94,6 +94,26 @@
 .statLine .k { color: var(--color-text-secondary); }
 .statLine .v { font-family: var(--font-mono); font-weight: 500; }
 
+/* 更新日志：版本时间与修改内容分两行 */
+.logList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.logItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.logVersion {
+  font: 700 13px/18px var(--font-mono);
+  color: var(--color-primary);
+}
+.logDesc {
+  font: 400 13px/20px var(--font-body);
+  color: var(--color-text-secondary);
+}
+
 .sectionGap {
   margin-top: 16px;
 }
