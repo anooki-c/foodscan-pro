@@ -1,56 +1,8 @@
 import type { AnalysisResult, Ingredient, Product } from "./types";
 
-/** 演示用 mock 数据（真实环境替换为 OCR/数据库/知识库分析） */
-
-const oatMilkProduct: Product = {
-  id: "p-oat-milk",
-  name: "即食燕麦片",
-  brand: "山野",
-  spec: "500g",
-  dataSource: "Open Food Facts",
-  updatedAt: "2026-08-30",
-};
-
-const energyDrinkProduct: Product = {
-  id: "p-energy",
-  name: "能量饮料",
-  brand: "燃动",
-  spec: "250ml",
-  dataSource: "Open Food Facts",
-  updatedAt: "2026-08-30",
-};
-
-const oatMilkIngredients: Ingredient[] = [
-  { id: "i-1", originalText: "燕麦片", finalText: "燕麦片", stdId: "RAW_001", originalPos: 1, finalPos: 1, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "natural" },
-  { id: "i-2", originalText: "白砂糖", finalText: "白砂糖", stdId: "RAW_002", originalPos: 2, finalPos: 2, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "natural" },
-  { id: "i-3", originalText: "麦芽糖浆", finalText: "麦芽糖浆", stdId: "PRC_001", originalPos: 3, finalPos: 3, matchScore: 96, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "processed" },
-  { id: "i-4", originalText: "乳粉", finalText: "乳粉", stdId: "RAW_010", originalPos: 4, finalPos: 4, matchScore: 86, matchMethod: "fuzzy", source: "ocr", confidence: "medium", isManual: false, category: "natural", allergens: ["乳"], needsConfirm: true },
-  { id: "i-5", originalText: "食用植物油", finalText: "食用植物油", stdId: "RAW_005", originalPos: 5, finalPos: 5, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "natural" },
-  { id: "i-6", originalText: "山梨酸钾", finalText: "山梨酸钾", stdId: "ADD_0001", originalPos: 6, finalPos: 6, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "防腐剂" },
-  { id: "i-7", originalText: "黄原胶", finalText: "黄原胶", stdId: "ADD_0002", originalPos: 7, finalPos: 7, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "增稠剂" },
-  { id: "i-8", originalText: "大豆卵磷脂", finalText: "大豆卵磷脂", stdId: "ADD_0003", originalPos: 8, finalPos: 8, matchScore: 92, matchMethod: "contains", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "乳化剂", allergens: ["大豆"] },
-  { id: "i-9", originalText: "食盐", finalText: "食盐", stdId: "RAW_006", originalPos: 9, finalPos: 9, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "natural" },
-  { id: "i-10", originalText: "碳酸钙", finalText: "碳酸钙", stdId: "ADD_0004", originalPos: 10, finalPos: 10, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "营养强化剂" },
-  { id: "i-11", originalText: "麦芽糊精", finalText: "麦芽糊精", stdId: "PRC_002", originalPos: 11, finalPos: 11, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "processed" },
-  { id: "i-12", originalText: "香兰素", finalText: "香兰素", stdId: "ADD_0005", originalPos: 12, finalPos: 12, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "香精香料" },
-];
-
-const energyIngredients: Ingredient[] = [
-  { id: "e-1", originalText: "水", finalText: "水", stdId: "RAW_020", originalPos: 1, finalPos: 1, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "natural" },
-  { id: "e-2", originalText: "白砂糖", finalText: "白砂糖", stdId: "RAW_002", originalPos: 2, finalPos: 2, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "natural" },
-  { id: "e-3", originalText: "果葡糖浆", finalText: "果葡糖浆", stdId: "PRC_003", originalPos: 3, finalPos: 3, matchScore: 98, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "processed" },
-  { id: "e-4", originalText: "柠檬酸", finalText: "柠檬酸", stdId: "ADD_0010", originalPos: 4, finalPos: 4, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "酸度调节剂" },
-  { id: "e-5", originalText: "咖啡因", finalText: "咖啡因", stdId: "ADD_0011", originalPos: 5, finalPos: 5, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "其他" },
-  { id: "e-6", originalText: "山梨酸钾", finalText: "山梨酸钾", stdId: "ADD_0001", originalPos: 6, finalPos: 6, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "防腐剂" },
-  { id: "e-7", originalText: "黄原胶", finalText: "黄原胶", stdId: "ADD_0002", originalPos: 7, finalPos: 7, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "增稠剂" },
-  { id: "e-8", originalText: "苯甲酸钠", finalText: "苯甲酸钠", stdId: "ADD_0012", originalPos: 8, finalPos: 8, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "防腐剂" },
-  { id: "e-9", originalText: "安赛蜜", finalText: "安赛蜜", stdId: "ADD_0013", originalPos: 9, finalPos: 9, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "甜味剂" },
-  { id: "e-10", originalText: "食用香精", finalText: "食用香精", stdId: "ADD_0014", originalPos: 10, finalPos: 10, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "香精香料" },
-  { id: "e-11", originalText: "维生素C", finalText: "维生素C", stdId: "ADD_0015", originalPos: 11, finalPos: 11, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "抗氧化剂" },
-  { id: "e-12", originalText: "维生素B6", finalText: "维生素B6", stdId: "ADD_0016", originalPos: 12, finalPos: 12, matchScore: 99, matchMethod: "exact", source: "ocr", confidence: "high", isManual: false, category: "additive", additiveType: "营养强化剂" },
-];
-
-/** 由配料数组推导统计 */
+/**
+ * 由配料数组推导统计（真实分析结果构造器，confirm 页提交时使用）
+ */
 export function buildAnalysis(id: string, product: Product, ingredients: Ingredient[]): AnalysisResult {
   const additiveStats: Record<string, number> = {};
   const allergenStats: Record<string, number> = {};
@@ -69,15 +21,9 @@ export function buildAnalysis(id: string, product: Product, ingredients: Ingredi
     confirmedAt: Date.now(),
     additiveStats,
     allergenStats,
-    // 注意：不再内嵌写死的 mock 解读文案。
     // AI 解读由结果页手动触发（/api/ai/summary），未配置时服务端返回基于真实配料动态生成的兜底文案。
   };
 }
-
-export const mockAnalysis = {
-  oatMilk: buildAnalysis("a-1", oatMilkProduct, oatMilkIngredients),
-  energy: buildAnalysis("a-2", energyDrinkProduct, energyIngredients),
-};
 
 /** 数据库候选（输入推荐，Top5） */
 export const CANDIDATES: Record<string, string[]> = {

@@ -541,6 +541,17 @@ export function listScanRecords(limit = 10): Array<Record<string, unknown>> {
     .all(Math.min(100, Math.max(1, limit))) as Array<Record<string, unknown>>;
 }
 
+/** 同步用：含 snapshot（完整 AnalysisResult JSON），按 id 升序返回便于前端合并 */
+export function listScanRecordsWithSnapshot(): Array<Record<string, unknown>> {
+  const db = getDb();
+  return db
+    .prepare(
+      `SELECT id, analysis_id, product_name, barcode, data_source, ingredient_count, snapshot, created_at
+       FROM scan_records ORDER BY id ASC`
+    )
+    .all() as Array<Record<string, unknown>>;
+}
+
 export function countScanRecords(): number {
   const db = getDb();
   return Number((db.prepare(`SELECT COUNT(*) AS c FROM scan_records`).get() as { c: number }).c);
@@ -549,6 +560,12 @@ export function countScanRecords(): number {
 export function deleteScanRecord(id: number): boolean {
   const db = getDb();
   return db.prepare(`DELETE FROM scan_records WHERE id = ?`).run(id).changes > 0;
+}
+
+/** 按 analysis_id 删除（跨端同步删除用） */
+export function deleteScanRecordByAnalysisId(analysisId: string): boolean {
+  const db = getDb();
+  return db.prepare(`DELETE FROM scan_records WHERE analysis_id = ?`).run(analysisId).changes > 0;
 }
 
 // ---------- OFF 数据缓存（按条码，1 小时 TTL） ----------

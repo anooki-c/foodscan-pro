@@ -1,19 +1,16 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AppBar from "@/components/AppBar";
 import Button from "@/components/Button";
 import Chip from "@/components/Chip";
 import GlassCard from "@/components/GlassCard";
 import TabBar from "@/components/TabBar";
-import { useAnalysisStore } from "@/store/analysis";
+import { syncHistoryFromServer, useAnalysisStore } from "@/store/analysis";
 import styles from "./page.module.css";
 
-const THUMB_GRADIENTS: Record<string, string> = {
-  "p-oat-milk": "linear-gradient(135deg, #A5D6A7 0%, #66BB6A 100%)",
-  "p-energy": "linear-gradient(135deg, #F48FB1 0%, #EC407A 100%)",
-};
+const THUMB_GRADIENT_FALLBACK = "linear-gradient(135deg,#B39DDB,#7E57C2)";
 
 type HistoryFilter = "all" | "additive" | "allergen";
 
@@ -30,6 +27,11 @@ export default function HistoryPage() {
 
   const [keyword, setKeyword] = useState("");
   const [filter, setFilter] = useState<HistoryFilter>("all");
+
+  // 进入历史页即从服务端拉取最新记录（跨端同步；store 内 30s 冷却防抖）
+  useEffect(() => {
+    void syncHistoryFromServer();
+  }, []);
 
   const filtered = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
@@ -89,7 +91,7 @@ export default function HistoryPage() {
                 <Link href={`/result/${h.id}`} className={styles.historyMain}>
                   <div
                     className={styles.historyThumb}
-                    style={{ background: THUMB_GRADIENTS[h.product.id] ?? "linear-gradient(135deg,#B39DDB,#7E57C2)" }}
+                    style={{ background: THUMB_GRADIENT_FALLBACK }}
                   >
                     <span className="material-symbols-rounded">inventory_2</span>
                   </div>

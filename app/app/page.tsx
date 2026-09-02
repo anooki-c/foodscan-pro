@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import AppBar from "@/components/AppBar";
 import TabBar from "@/components/TabBar";
 import Chip from "@/components/Chip";
 import GlassCard from "@/components/GlassCard";
-import { useAnalysisStore } from "@/store/analysis";
+import { syncHistoryFromServer, useAnalysisStore } from "@/store/analysis";
 import styles from "./page.module.css";
 
 const ENTRIES = [
@@ -40,10 +40,7 @@ const ENTRIES = [
   },
 ] as const;
 
-const THUMB_GRADIENTS: Record<string, string> = {
-  "p-oat-milk": "linear-gradient(135deg, #A5D6A7 0%, #66BB6A 100%)",
-  "p-energy": "linear-gradient(135deg, #F48FB1 0%, #EC407A 100%)",
-};
+const THUMB_GRADIENT_FALLBACK = "linear-gradient(135deg,#B39DDB,#7E57C2)";
 
 const ENTRY_TABS = [
   { key: "all", label: "全部入口" },
@@ -56,6 +53,11 @@ const ENTRY_TABS = [
 export default function HomePage() {
   const history = useAnalysisStore((s) => s.history);
   const [entryTab, setEntryTab] = useState<string>("all");
+
+  // 进入首页即从服务端拉取最新分析历史（跨端同步；store 内 30s 冷却防抖）
+  useEffect(() => {
+    void syncHistoryFromServer();
+  }, []);
 
   const visibleEntries =
     entryTab === "all" ? ENTRIES : ENTRIES.filter((e) => e.key === entryTab);
@@ -127,7 +129,7 @@ export default function HomePage() {
               <Link href={`/result/${h.id}`} className={styles.historyMain}>
                 <div
                   className={styles.historyThumb}
-                  style={{ background: THUMB_GRADIENTS[h.product.id] ?? "linear-gradient(135deg,#B39DDB,#7E57C2)" }}
+                  style={{ background: THUMB_GRADIENT_FALLBACK }}
                 >
                   <span className="material-symbols-rounded">inventory_2</span>
                 </div>

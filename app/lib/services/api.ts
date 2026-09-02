@@ -1,4 +1,4 @@
-import type { Ingredient, Product } from "@/lib/types";
+import type { AnalysisResult, Ingredient, Product } from "@/lib/types";
 
 /** 前端 API service 层：调用真实后端，失败时由页面回退 mock */
 
@@ -43,7 +43,17 @@ export async function fetchOcr(image: string, mime = "jpeg"): Promise<OcrResult>
       signal: controller.signal,
     });
     clearTimeout(timer);
-    const data = await res.json();
+    // 后端异常返回 JSON 错误；极端情况（网关 502/413 HTML）时兜底显示真实状态码
+    const text = await res.text();
+    let data: Partial<OcrResult> = {};
+    try {
+      data = JSON.parse(text);
+    } catch {
+      if (!res.ok) {
+        return { ok: false, error: `服务器异常（HTTP ${res.status}），请稍后重试`, code: "OCR_HTTP_ERROR" };
+      }
+      return { ok: false, error: "识别服务返回了无法解析的内容", code: "OCR_BAD_RESPONSE" };
+    }
     if (!res.ok) {
       return { ok: false, error: data.error ?? "识别失败", code: data.code };
     }
@@ -298,6 +308,28 @@ export async function saveScanRecord(input: {
       body: JSON.stringify(input),
     });
     return await res.json();
+  } catch {
+    return { ok: false };
+  }
+}
+
+/** 拉取服务端全量分析记录（含完整 snapshot，供跨端同步合并） */
+export async function fetchFullScanRecords(): Promise<Array<{ analysisId: string; snapshot: AnalysisResult }>> {
+  try {
+    const res = await fetch("/api/scan?full=1");
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data.items) ? data.items : [];
+  } catch {
+    return [];
+  }
+}
+
+/** 服务端删除一条分析记录（按 analysisId） */
+export async function deleteScanRecordByAnalysisId(analysisId: string): Promise<{ ok: boolean }> {
+  try {
+    const res = await fetch(`/api/scan?analysisId=${encodeURIComponent(analysisId)}`, { method: "DELETE" });
+    return { ok: res.ok };
   } catch {
     return { ok: false };
   }
