@@ -148,6 +148,31 @@
   flex-shrink: 0;
 }
 
+/* 命中关注过敏原的配料行：左侧警示条 + 浅红底 */
+.ingRowFocus {
+  background: rgba(229, 72, 77, 0.06);
+  border-left: 3px solid var(--color-danger, #e5484d);
+  padding-left: 8px;
+}
+.ingRowFocus:hover {
+  background: rgba(229, 72, 77, 0.1);
+}
+.chipFocus {
+  box-shadow: 0 0 0 1px rgba(229, 72, 77, 0.55);
+}
+.focusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  font: 600 11px/16px var(--font-body);
+  color: #fff;
+  background: var(--color-danger, #e5484d);
+  border-radius: var(--radius-pill);
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
 /* 添加剂 */
 .additiveStats {
   display: flex;
@@ -178,6 +203,10 @@
   gap: 8px;
   margin-bottom: 6px;
   color: var(--color-status-allergen-fg);
+}
+.allergenBlockFocus {
+  border-color: var(--color-danger, #e5484d);
+  background: rgba(229, 72, 77, 0.08);
 }
 .allergenName {
   font: 700 14px/20px var(--font-display);

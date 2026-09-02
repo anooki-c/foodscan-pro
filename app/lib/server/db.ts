@@ -66,7 +66,7 @@ export interface ScanRecordInput {
   snapshot?: unknown;
 }
 
-const SEED_VERSION = "2";
+const SEED_VERSION = "3";
 
 function dbPath(): string {
   return process.env.DB_FILE || path.join(process.cwd(), "data", "foodscan.db");

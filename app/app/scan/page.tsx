@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppBar from "@/components/AppBar";
 import Button from "@/components/Button";
 import { fetchProductByBarcode } from "@/lib/services/api";
@@ -8,6 +9,7 @@ import { useAnalysisStore } from "@/store/analysis";
 import styles from "./page.module.css";
 
 export default function ScanPage() {
+  const router = useRouter();
   const [barcode, setBarcode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -57,12 +59,13 @@ export default function ScanPage() {
       );
       // 仍允许继续：把空产品预填，用户到确认页手动新增
       useAnalysisStore.getState().setDraftIngredients([]);
-      window.location.href = "/confirm?source=barcode";
+      // 客户端导航：保留 zustand 内存态（整页跳转会丢失 draft）
+      router.push("/confirm?source=barcode");
       return;
     }
 
     useAnalysisStore.getState().setDraftIngredients(result.ingredients);
-    window.location.href = "/confirm?source=barcode";
+    router.push("/confirm?source=barcode");
   };
 
   const startCamera = async () => {
@@ -182,7 +185,7 @@ export default function ScanPage() {
               variant="ghost"
               size="md"
               style={{ flex: 1 }}
-              onClick={() => (window.location.href = "/confirm?source=manual")}
+              onClick={() => router.push("/confirm?source=manual")}
             >
               手动输入配料
             </Button>

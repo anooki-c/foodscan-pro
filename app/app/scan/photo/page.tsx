@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import AppBar from "@/components/AppBar";
 import Button from "@/components/Button";
 import { fetchOcr } from "@/lib/services/api";
@@ -82,6 +83,7 @@ function clamp(v: number, min: number, max: number): number {
 }
 
 export default function PhotoScanPage() {
+  const router = useRouter();
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -254,7 +256,8 @@ export default function PhotoScanPage() {
       setOcrResult({ count: res.ingredients.length });
       setStatus("success");
       jumpTimer.current = setTimeout(() => {
-        window.location.href = "/confirm?source=ocr";
+        // 客户端导航：保留 zustand 内存态中的识别草稿（整页跳转会丢失）
+        router.push("/confirm?source=ocr");
       }, 1400);
     } catch (e) {
       setStatus("ready");
@@ -433,7 +436,7 @@ export default function PhotoScanPage() {
                 <p>{error}</p>
                 <button
                   className={styles.linkBtn}
-                  onClick={() => (window.location.href = "/confirm?source=manual")}
+                  onClick={() => router.push("/confirm?source=manual")}
                 >
                   改为手动输入配料 →
                 </button>

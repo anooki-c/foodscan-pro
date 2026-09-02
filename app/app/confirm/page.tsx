@@ -7,6 +7,7 @@ import Button from "@/components/Button";
 import IngredientRow from "@/components/IngredientRow";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import { useAnalysisStore, confirmDraft } from "@/store/analysis";
+import { fetchKnowledge } from "@/lib/services/api";
 import { CANDIDATES } from "@/lib/mock-data";
 import type { Ingredient } from "@/lib/types";
 import styles from "./page.module.css";
@@ -43,11 +44,11 @@ function ConfirmInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source, editId]);
 
-  /** 手动新增一条配料（输入为空时忽略） */
-  const addManual = () => {
+  /** 手动新增一条配料（输入为空时忽略）；命中知识库时补充过敏原与分类 */
+  const addManual = async () => {
     const text = manualInput.trim();
     if (!text) return;
-    addDraftIngredient({
+    const ing: Ingredient = {
       id: `i-manual-${Date.now()}`,
       originalText: text,
       finalText: text,
@@ -56,7 +57,25 @@ function ConfirmInner() {
       source: "manual",
       confidence: "manual",
       isManual: true,
-    });
+    };
+    // 查询知识库补充过敏原/分类（如「乳清粉」→ 过敏原乳），使配料行直接标注
+    try {
+      const kb = await fetchKnowledge(text, "auto");
+      if (kb && kb.type !== "none") {
+        const d = kb.data as { allergens?: string[]; category?: string };
+        if (Array.isArray(d.allergens) && d.allergens.length > 0) {
+          ing.allergens = d.allergens;
+        }
+        if (kb.type === "additive") {
+          ing.category = "additive";
+        } else if (d.category) {
+          ing.category = d.category as Ingredient["category"];
+        }
+      }
+    } catch {
+      // 知识库查询失败不阻塞手动新增
+    }
+    addDraftIngredient(ing);
     setManualInput("");
   };
 

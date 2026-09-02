@@ -5,8 +5,34 @@ import {
   callAiExtractIngredients,
 } from "@/lib/server/off";
 import { getServerConfig } from "@/lib/server/config";
+import { lookupKnowledge } from "@/lib/server/db";
+import type { Ingredient } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+
+/**
+ * 用本地知识库给配料补充过敏原与分类（精确名 → 别名，命中即填充）。
+ * 未命中的配料保持原样，由前端确认页手动补全。
+ */
+function enrichWithKnowledge(list: Ingredient[]): Ingredient[] {
+  return list.map((ing) => {
+    const hit = lookupKnowledge(ing.finalText || ing.originalText, "auto");
+    if (!hit) return ing;
+    const extra = hit.row.extra ?? {};
+    const allergens = Array.isArray(extra.allergens)
+      ? extra.allergens.map(String)
+      : [];
+    const enriched: Ingredient = { ...ing };
+    if (allergens.length > 0) enriched.allergens = allergens;
+    if (hit.row.category) {
+      enriched.category = (hit.row.category as Ingredient["category"]) || undefined;
+    }
+    if (hit.kind === "additive" && !enriched.category) {
+      enriched.category = "additive";
+    }
+    return enriched;
+  });
+}
 
 /**
  * POST /api/ocr
@@ -72,6 +98,9 @@ export async function POST(req: Request) {
       i.needsConfirm = true;
       i.confidence = third.confidence >= 70 ? "medium" : "low";
     });
+
+    // 命中知识库的配料补充过敏原与分类，使结果页/确认页能直接标注（如乳清粉 → 乳）
+    ingredients = enrichWithKnowledge(ingredients);
     return NextResponse.json({
       ok: true,
       provider: cfg.ocr.provider,

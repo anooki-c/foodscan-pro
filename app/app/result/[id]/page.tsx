@@ -17,6 +17,13 @@ import styles from "./page.module.css";
 /** AI 解读结果缓存（按分析记录 id，命中即不再调用 AI，节约 token） */
 const AI_CACHE_PREFIX = "foodscan-ai-summary:";
 
+/** 关注过敏原 key（如「乳」「花生/坚果」）与配料过敏原（如「乳（可能）」）是否命中 */
+function allergenHit(focusKey: string, allergen: string): boolean {
+  const base = allergen.replace(/[（(].*?[）)]/g, "").trim();
+  const keys = focusKey.split("/").map((s) => s.trim());
+  return keys.some((k) => base === k || base.includes(k) || k.includes(base));
+}
+
 function readAiCache(id: string): string | null {
   try {
     return localStorage.getItem(AI_CACHE_PREFIX + id);
@@ -47,6 +54,24 @@ export default function ResultPage() {
   const [aiLoading, setAiLoading] = useState(false);
   // 分享反馈提示
   const [shareTip, setShareTip] = useState("");
+  // 关注过敏原（settings 页「过敏原关注项」，本机生效；空数组=未关注）
+  const [focusAllergens, setFocusAllergens] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("allergen_focus");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) setFocusAllergens(parsed);
+      }
+    } catch {
+      // 本地数据损坏时忽略，按未关注处理
+    }
+  }, []);
+
+  /** 某配料命中的关注过敏原列表（如关注「乳」时配料「乳清粉」→ ["乳"]） */
+  const focusHits = (ing: Ingredient) =>
+    focusAllergens.filter((f) => ing.allergens?.some((a) => allergenHit(f, a)));
 
   // 详情弹窗「修改配料」：与「编辑配料表」逻辑一致——关闭弹窗、回填配料，
   // 跳转确认页并携带 fix 参数，由确认页自动高亮目标配料进入编辑态
@@ -216,28 +241,43 @@ export default function ResultPage() {
             <h2>配料表</h2>
             <span className={styles.count}>按确认后顺序 · 共 {ings.length} 项</span>
           </div>
-          {ings.map((ing, idx) => (
-            <button
-              type="button"
-              className={styles.ingRow}
-              key={ing.id}
-              onClick={() => setSelectedIngredient(ing)}
-            >
-              <span className={styles.idx}>{String(idx + 1).padStart(2, "0")}</span>
-              <div className={styles.ingInfo}>
-                <div className={styles.ingName}>{ing.finalText}</div>
-                <div className={styles.tags}>
-                  {ing.category && <Chip category={ing.category} />}
-                  {ing.allergens?.map((a) => (
-                    <Chip key={a} variant="allergen">{a}</Chip>
-                  ))}
+          {ings.map((ing, idx) => {
+            const hits = focusHits(ing);
+            return (
+              <button
+                type="button"
+                className={`${styles.ingRow} ${hits.length ? styles.ingRowFocus : ""}`}
+                key={ing.id}
+                onClick={() => setSelectedIngredient(ing)}
+              >
+                <span className={styles.idx}>{String(idx + 1).padStart(2, "0")}</span>
+                <div className={styles.ingInfo}>
+                  <div className={styles.ingName}>{ing.finalText}</div>
+                  <div className={styles.tags}>
+                    {ing.category && <Chip category={ing.category} />}
+                    {ing.allergens?.map((a) => (
+                      <Chip
+                        key={a}
+                        variant="allergen"
+                        className={hits.some((f) => allergenHit(f, a)) ? styles.chipFocus : undefined}
+                      >
+                        {a}
+                      </Chip>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <span className={`${styles.chev} material-symbols-rounded`} style={{ fontSize: 18 }}>
-                chevron_right
-              </span>
-            </button>
-          ))}
+                {hits.length > 0 && (
+                  <span className={styles.focusPill}>
+                    <span className="material-symbols-rounded" style={{ fontSize: 13 }}>warning</span>
+                    已关注
+                  </span>
+                )}
+                <span className={`${styles.chev} material-symbols-rounded`} style={{ fontSize: 18 }}>
+                  chevron_right
+                </span>
+              </button>
+            );
+          })}
         </GlassCard>
 
         {/* 添加剂分析 */}
@@ -280,15 +320,27 @@ export default function ResultPage() {
             <h2>潜在过敏原</h2>
             <span className={styles.count}>{allergens.length} 类</span>
           </div>
-          {allergens.map((ing) => (
-            <div key={ing.id} className={styles.allergenBlock}>
-              <div className={styles.allergenHead}>
-                <span className="material-symbols-rounded" style={{ fontSize: 18 }}>warning</span>
-                <span className={styles.allergenName}>{ing.allergens?.join(" / ")}</span>
+          {allergens.map((ing) => {
+            const hits = focusHits(ing);
+            return (
+              <div
+                key={ing.id}
+                className={`${styles.allergenBlock} ${hits.length ? styles.allergenBlockFocus : ""}`}
+              >
+                <div className={styles.allergenHead}>
+                  <span className="material-symbols-rounded" style={{ fontSize: 18 }}>warning</span>
+                  <span className={styles.allergenName}>{ing.allergens?.join(" / ")}</span>
+                  {hits.length > 0 && (
+                    <span className={styles.focusPill}>
+                      <span className="material-symbols-rounded" style={{ fontSize: 13 }}>warning</span>
+                      已关注
+                    </span>
+                  )}
+                </div>
+                <div className={styles.allergenSrc}>来源：{ing.finalText}</div>
               </div>
-              <div className={styles.allergenSrc}>来源：{ing.finalText}</div>
-            </div>
-          ))}
+            );
+          })}
           <p className={styles.allergenNote}>
             配料中包含可能属于常见过敏原类别的成分，请相关人群注意。请以食品包装上的过敏原声明及专业建议为准。
           </p>
